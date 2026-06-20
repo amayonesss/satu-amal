@@ -3,12 +3,12 @@ flask-login
 flask-sqlalchemy
 flask-migrate
 flask-wtf
+flask-mail
 python-dotenv
 pandas
 openpyxl
-opencv-python
-face-recognition
-numpy
 Pillow
 werkzeug
 pymysql
+gunicorn
+requests

@@ -11,10 +11,9 @@ class Config:
     UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads', 'faces')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
     KEGIATAN_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads', 'kegiatan')
-      # Konfigurasi Email
-    MAIL_SERVER = 'smtp.gmail.com'
-    MAIL_PORT = 587
-    MAIL_USE_TLS = True
-    MAIL_USERNAME = 'ameldwiputri14@gmail.com'
-    MAIL_PASSWORD = 'qvtj rjav zyzu kild'
-    MAIL_DEFAULT_SENDER = 'ameldwiputri14@gmail.com'
+    MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'smtp.gmail.com'
+    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'True').lower() == 'true'
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME') or 'ameldwiputri14@gmail.com'
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD') or 'qvtj rjav zyzu kild'
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or MAIL_USERNAME
