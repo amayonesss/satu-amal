@@ -1,0 +1,843 @@
+{% extends 'base_admin.html' %} {% block title %}Kelola Program - Satu Amal{%
+endblock %} {% block extra_style %} .topbar { display: flex; justify-content:
+space-between; align-items: center; margin-bottom: 28px; } .topbar h1 {
+font-size: 1.5rem; color: #1a2d4f; font-weight: 700; } /* CARD */ .card {
+background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 2px 16px
+rgba(0,0,0,0.07); margin-bottom: 28px; } .card-header { display: flex;
+justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.card-header h3 { font-size: 1.05rem; color: #1a2d4f; display: flex;
+align-items: center; gap: 8px; font-weight: 700; } .card-header h3 i { color:
+#1f59d2; } /* SEARCH & TABLE */ .search-bar { display: flex; align-items:
+center; gap: 10px; background: #f5f7fa; border: 1.5px solid #dde3ef;
+border-radius: 10px; padding: 9px 14px; max-width: 400px; margin-bottom: 16px; }
+.search-bar input { border: none; outline: none; font-size: 0.88rem; background:
+transparent; width: 100%; } table { width: 100%; border-collapse: collapse;
+min-width: 800px; } th { background: #f0f5fb; padding: 11px 14px; text-align:
+left; font-size: 0.82rem; color: #555; font-weight: 700; } td { padding: 11px
+14px; border-bottom: 1px solid #f0f2f5; font-size: 0.87rem; color: #444; }
+.badge { display: inline-block; padding: 3px 12px; border-radius: 20px;
+font-size: 0.78rem; background: #e3effd; color: #1f59d2; font-weight: 600; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px;
+border-radius: 8px; font-size: 0.88rem; cursor: pointer; border: none;
+font-weight: 600; text-decoration: none; transition: all 0.2s; } .btn-primary {
+background: #1f59d2; color: #fff; } .btn-primary:hover { background: #1643a3;
+transform: translateY(-1px); } .btn-warning { background: #f5a623; color: #fff;
+} .btn-warning:hover { background: #d68f1c; transform: translateY(-1px); }
+.btn-danger { background: #e74c3c; color: #fff; } .btn-danger:hover {
+background: #c0392b; transform: translateY(-1px); } .btn-success { background:
+#107c41; color: #fff; } .btn-success:hover { background: #0b592e; transform:
+translateY(-1px); } .btn-secondary { background: #f0f2f5; color: #555; } /* ──
+MODAL ── */ .modal-overlay { display: none; position: fixed; inset: 0;
+background: rgba(0,0,0,0.5); z-index: 1100; align-items: center;
+justify-content: center; backdrop-filter: blur(2px); } .modal-overlay.open {
+display: flex; } .modal-box { background: #fff; border-radius: 16px; padding:
+28px; width: 100%; max-width: 580px; max-height: 90vh; overflow-y: auto;
+box-shadow: 0 10px 25px rgba(0,0,0,0.2); } .modal-header { display: flex;
+justify-content: space-between; align-items: center; margin-bottom: 20px;
+padding-bottom: 14px; border-bottom: 1px solid #f0f2f5; } .modal-header h3 {
+font-size: 1.2rem; color: #1a2d4f; font-weight: 700; } .modal-footer { display:
+flex; gap: 10px; margin-top: 24px; padding-top: 18px; border-top: 1px solid
+#f0f2f5; } .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+} .form-group { margin-bottom: 18px; } .form-group label { display: block;
+font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: #555; }
+.form-group input, .form-group select { width: 100%; padding: 11px 14px; border:
+1.5px solid #dde3ef; border-radius: 8px; font-size: 0.9rem; transition:
+border-color 0.2s; } .form-group input:focus, .form-group select:focus {
+border-color: #1f59d2; outline: none; } /* PAGINATION */ .pagination { display:
+flex; justify-content: center; gap: 8px; margin-top: 20px; list-style: none;
+padding: 0; } .pagination li a, .pagination li span { padding: 8px 12px;
+border-radius: 6px; border: 1px solid #dde3ef; text-decoration: none; color:
+#1a2d4f; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; }
+.pagination li a:hover { background: #f0f5fb; color: #1f59d2; border-color:
+#1f59d2; } .pagination li.active span { background: #1f59d2; color: #fff;
+border-color: #1f59d2; } .pagination li.disabled span { background: #f5f7fa;
+color: #aab; cursor: not-allowed; } {% endblock %} {% block content %} {% set
+can_crud = current_user.role == 'admin' or (current_user.role == 'tim_manajemen'
+and current_user.tim_akses and current_user.tim_akses[0].akses_crud) %}
+
+<div class="topbar">
+  <h1>
+    <i class="fas fa-list-alt" style="color: #1f59d2; margin-right: 10px"></i>{%
+    if can_crud %}Kelola Program{% else %}Daftar Program{% endif %}
+  </h1>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-list"></i> Daftar Program</h3>
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
+      {% if current_user.role == 'tim_manajemen' %}
+      <a
+        href="{{ url_for('tim_manajemen.export_excel') }}"
+        class="btn btn-success"
+        ><i class="fas fa-file-excel"></i> Ekspor Excel</a
+      >
+      <a
+        href="{{ url_for('tim_manajemen.export_pdf') }}"
+        class="btn btn-danger"
+        target="_blank"
+        ><i class="fas fa-file-pdf"></i> Cetak PDF</a
+      >
+      {% else %}
+      <a href="{{ url_for('dashboard.export_excel') }}" class="btn btn-success"
+        ><i class="fas fa-file-excel"></i> Ekspor Excel</a
+      >
+      <a
+        href="{{ url_for('dashboard.export_pdf') }}"
+        class="btn btn-danger"
+        target="_blank"
+        ><i class="fas fa-file-pdf"></i> Cetak PDF</a
+      >
+      {% endif %} {% if can_crud %}
+      <button class="btn btn-primary" onclick="bukaModal()">
+        <i class="fas fa-plus"></i> Tambah Program
+      </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <i class="fas fa-search" style="color: #aab"></i
+    ><input
+      type="text"
+      id="searchInput"
+      placeholder="Cari program..."
+    />
+  </div>
+
+  <div style="overflow-x: auto; -webkit-overflow-scrolling: touch">
+    <table id="programTable">
+      <thead>
+        <tr>
+          <th style="width: 50px">No</th>
+          <th>Program</th>
+          <th>Kategori</th>
+          <th>Waktu</th>
+          <th>Kota</th>
+          <th>Kecamatan</th>
+          <th style="text-align: right">Relawan</th>
+          <th style="text-align: right">Penerima Manfaat</th>
+          <th style="text-align: center">Durasi (menit)</th>
+          {% if can_crud %}
+          <th style="text-align: center; width: 120px">Aksi</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody id="programBody">
+        {% for p in program_list %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ p.nama_program }}</td>
+          <td><span class="badge">{{ p.kategori or '-' }}</span></td>
+          <td>
+            {% if p.tanggal_pelaksanaan %} {{
+            p.tanggal_pelaksanaan.strftime('%d') }} {{ p.bulan }} {{ p.tahun }}
+            {% elif p.bulan %} {{ p.bulan }} {{ p.tahun }} {% else %} {{ p.tahun
+            or '-' }} {% endif %}
+          </td>
+          <td>{{ p.kota or '-' }}</td>
+          <td>{{ p.kecamatan or '-' }}</td>
+          <td style="text-align: right">{{ p.jumlah_relawan }}</td>
+          <td style="text-align: right">{{ p.jumlah_penerima_manfaat }}</td>
+          <td style="text-align: center">{{ p.lama_kegiatan_menit or '-' }}</td>
+          {% if can_crud %}
+          <td>
+            <div
+              style="
+                display: flex;
+                gap: 6px;
+                justify-content: center;
+                flex-wrap: wrap;
+              "
+            >
+              <a
+                href="{{ url_for('dashboard.view_evaluasi_program', program_id=p.id) }}"
+                class="btn"
+                style="
+                  padding: 6px 10px;
+                  font-size: 0.8rem;
+                  background: #107c41;
+                  color: white;
+                  border-radius: 8px;
+                "
+                title="Lihat Evaluasi PIC"
+              >
+                <i class="fas fa-clipboard-check"></i>
+              </a>
+              <a
+                href="{{ url_for('dashboard.koordinator_program', program_id=p.id) }}"
+                class="btn"
+                style="
+                  padding: 6px 10px;
+                  font-size: 0.8rem;
+                  background: #17a2b8;
+                  color: white;
+                  border-radius: 8px;
+                "
+                title="Kelola Koordinator"
+              >
+                <i class="fas fa-users-cog"></i>
+              </a>
+              <button
+                class="btn btn-warning"
+                style="padding: 6px 10px; font-size: 0.8rem"
+                data-id="{{ p.id }}"
+                onclick="bukaModalEdit(Number(this.dataset.id))"
+                title="Edit"
+              >
+                <i class="fas fa-edit"></i>
+              </button>
+              <form
+                method="POST"
+                action="{{ url_for('dashboard.hapus_program', program_id=p.id) }}"
+                onsubmit="return confirm('Apakah Anda yakin ingin menghapus program {{ p.nama_program }}?')"
+              >
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="{{ csrf_token() }}"
+                />
+                <button
+                  type="submit"
+                  class="btn btn-danger"
+                  style="padding: 6px 10px; font-size: 0.8rem"
+                  title="Hapus"
+                >
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PAGINATION -->
+  {% if pagination and pagination.pages > 1 %}
+  <ul class="pagination">
+    <li class="{% if not pagination.has_prev %}disabled{% endif %}">
+      {% if pagination.has_prev %}
+      <a href="{{ url_for('master.master_program', page=pagination.prev_num) }}"
+        >&laquo; Prev</a
+      >
+      {% else %}
+      <span>&laquo; Prev</span>
+      {% endif %}
+    </li>
+    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1,
+    left_current=2, right_current=2) %} {% if page_num %} {% if pagination.page
+    == page_num %}
+    <li class="active"><span>{{ page_num }}</span></li>
+    {% else %}
+    <li>
+      <a href="{{ url_for('master.master_program', page=page_num) }}"
+        >{{ page_num }}</a
+      >
+    </li>
+    {% endif %} {% else %}
+    <li class="disabled"><span>...</span></li>
+    {% endif %} {% endfor %}
+    <li class="{% if not pagination.has_next %}disabled{% endif %}">
+      {% if pagination.has_next %}
+      <a href="{{ url_for('master.master_program', page=pagination.next_num) }}"
+        >Next &raquo;</a
+      >
+      {% else %}
+      <span>Next &raquo;</span>
+      {% endif %}
+    </li>
+  </ul>
+  {% endif %}
+</div>
+
+<!-- MODAL ADD -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Tambah Program Baru</h3>
+      <button
+        onclick="tutupModal()"
+        style="
+          border: none;
+          background: none;
+          font-size: 1.5rem;
+          cursor: pointer;
+          color: #999;
+        "
+      >
+        &times;
+      </button>
+    </div>
+    <form method="POST" action="{{ url_for('dashboard.tambah_program') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <div class="form-group">
+        <label>Nama Program</label
+        ><input
+          type="text"
+          name="nama_program"
+          placeholder="Contoh: Berbagi Beras Santri"
+          required
+        />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Kategori</label>
+          <select name="kategori" title="Kategori Program">
+            <option value="">-- Pilih Kategori --</option>
+            <option>Event Sosial</option>
+            <option>Lingkungan</option>
+            <option>Palestina</option>
+            <option>Pangan</option>
+            <option>Pemberdayaan</option>
+            <option>Pendidikan</option>
+            <option>Respon Bencana (Bantuan Air Bersih)</option>
+            <option>Respon Bencana (Bantuan Kesehatan)</option>
+            <option>Respon Bencana (Kebutuhan Sekolah)</option>
+            <option>Respon Bencana (Pangan)</option>
+            <option>Respon Bencana (Recovery)</option>
+            <option>Respon Bencana (Psikososial)</option>
+            <option>Syiar & Dakwah</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Bulan</label>
+          <select name="bulan" title="Bulan">
+            <option value="">-- Pilih Bulan --</option>
+            <option>Januari</option>
+            <option>Februari</option>
+            <option>Maret</option>
+            <option>April</option>
+            <option>Mei</option>
+            <option>Juni</option>
+            <option>Juli</option>
+            <option>Agustus</option>
+            <option>September</option>
+            <option>Oktober</option>
+            <option>November</option>
+            <option>Desember</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tahun</label
+          ><input
+            type="number"
+            name="tahun"
+            id="add_tahun"
+            value="{{ current_year | default(2024) }}"
+            placeholder="Contoh: 2024"
+          />
+        </div>
+        <div class="form-group">
+          <label
+            >Tanggal Pelaksanaan
+            <span style="color: #aaa; font-weight: 400">(opsional)</span></label
+          ><input
+            type="date"
+            name="tanggal_pelaksanaan"
+            id="add_tanggal"
+            onchange="autoIsiBulanTahunAdd(this)"
+          />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Nama Tempat Kegiatan</label>
+        <input
+          type="text"
+          name="nama_tempat"
+          placeholder="Contoh: Aula Masjid Al-Ikhlas"
+        />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Provinsi</label>
+          <select name="provinsi" id="add_provinsi" onchange="loadKabupaten('add')">
+            <option value="">-- Pilih Provinsi --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Kota/Kabupaten</label>
+          <select name="kota" id="add_kota" onchange="loadKecamatan('add')">
+            <option value="">-- Pilih Kota --</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Kecamatan</label>
+          <select name="kecamatan" id="add_kecamatan" onchange="loadKelurahan('add')">
+            <option value="">-- Pilih Kecamatan --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Kelurahan</label>
+          <select name="kelurahan" id="add_kelurahan">
+            <option value="">-- Pilih Kelurahan --</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Lama Kegiatan (menit)</label>
+          <input
+            type="number"
+            name="lama_kegiatan_menit"
+            placeholder="Contoh: 120"
+            min="0"
+          />
+        </div>
+        <div class="form-group">
+          <label>Jumlah Relawan</label
+          ><input
+            type="number"
+            name="jumlah_relawan"
+            min="0"
+            value="0"
+            placeholder="0"
+          />
+        </div>
+        <div class="form-group">
+          <label>Penerima Manfaat</label
+          ><input
+            type="number"
+            name="jumlah_penerima_manfaat"
+            min="0"
+            value="0"
+            placeholder="0"
+          />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-save"></i> Simpan Program
+        </button>
+        <button type="button" onclick="tutupModal()" class="btn btn-secondary">
+          Batal
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL EDIT -->
+<div class="modal-overlay" id="modalEdit">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Edit Detail Program</h3>
+      <button
+        onclick="tutupModalEdit()"
+        style="
+          border: none;
+          background: none;
+          font-size: 1.5rem;
+          cursor: pointer;
+          color: #999;
+        "
+      >
+        &times;
+      </button>
+    </div>
+    <form method="POST" id="formEdit">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <div class="form-group">
+        <label>Nama Program</label>
+        <input type="text" id="edit_nama" name="nama_program" required />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Kategori</label>
+          <select id="edit_kategori" name="kategori">
+            <option value="">-- Pilih Kategori --</option>
+            <option>Event Sosial</option>
+            <option>Lingkungan</option>
+            <option>Palestina</option>
+            <option>Pangan</option>
+            <option>Pemberdayaan</option>
+            <option>Pendidikan</option>
+            <option>Respon Bencana (Bantuan Air Bersih)</option>
+            <option>Respon Bencana (Bantuan Kesehatan)</option>
+            <option>Respon Bencana (Kebutuhan Sekolah)</option>
+            <option>Respon Bencana (Pangan)</option>
+            <option>Respon Bencana (Recovery)</option>
+            <option>Respon Bencana (Psikososial)</option>
+            <option>Syiar & Dakwah</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Bulan</label>
+          <select id="edit_bulan" name="bulan">
+            <option value="">-- Pilih Bulan --</option>
+            <option>Januari</option>
+            <option>Februari</option>
+            <option>Maret</option>
+            <option>April</option>
+            <option>Mei</option>
+            <option>Juni</option>
+            <option>Juli</option>
+            <option>Agustus</option>
+            <option>September</option>
+            <option>Oktober</option>
+            <option>November</option>
+            <option>Desember</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tahun</label
+          ><input
+            type="number"
+            id="edit_tahun"
+            name="tahun"
+            placeholder="Contoh: 2024"
+          />
+        </div>
+        <div class="form-group">
+          <label
+            >Tanggal Pelaksanaan
+            <span style="color: #aaa; font-weight: 400">(opsional)</span></label
+          ><input
+            type="date"
+            id="edit_tanggal"
+            name="tanggal_pelaksanaan"
+            onchange="autoIsiBulanTahunEdit(this)"
+          />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Nama Tempat Kegiatan</label>
+        <input
+          type="text"
+          id="edit_nama_tempat"
+          name="nama_tempat"
+          placeholder="Contoh: Aula Masjid Al-Ikhlas"
+        />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Provinsi</label>
+          <select id="edit_provinsi" name="provinsi" onchange="loadKabupaten('edit')">
+            <option value="">-- Pilih Provinsi --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Kota/Kabupaten</label>
+          <select id="edit_kota" name="kota" onchange="loadKecamatan('edit')">
+            <option value="">-- Pilih Kota --</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Kecamatan</label>
+          <select id="edit_kecamatan" name="kecamatan" onchange="loadKelurahan('edit')">
+            <option value="">-- Pilih Kecamatan --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Kelurahan</label>
+          <select id="edit_kelurahan" name="kelurahan">
+            <option value="">-- Pilih Kelurahan --</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Lama Kegiatan (menit)</label>
+          <input
+            type="number"
+            id="edit_lama_kegiatan_menit"
+            name="lama_kegiatan_menit"
+            placeholder="Contoh: 120"
+            min="0"
+          />
+        </div>
+        <div class="form-group">
+          <label>Jumlah Relawan</label
+          ><input
+            type="number"
+            id="edit_jumlah_relawan"
+            name="jumlah_relawan"
+            min="0"
+            placeholder="0"
+          />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Penerima Manfaat</label
+          ><input
+            type="number"
+            id="edit_jumlah_penerima_manfaat"
+            name="jumlah_penerima_manfaat"
+            min="0"
+            placeholder="0"
+          />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-save"></i> Simpan Perubahan
+        </button>
+        <button
+          type="button"
+          onclick="tutupModalEdit()"
+          class="btn btn-secondary"
+        >
+          Batal
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %} {% block extra_script %}
+<script>
+  // ── Casting selects wilayah ──
+  const API_PROV = "{{ url_for('wilayah.provinsi') }}";
+  const API_KAB  = "{{ url_for('wilayah.kabupaten', prov_id='') }}";
+  const API_KEC  = "{{ url_for('wilayah.kecamatan', kab_id='') }}";
+  const API_KEL  = "{{ url_for('wilayah.kelurahan', kec_id='') }}";
+
+  let cacheProv = [], cacheKab = {}, cacheKec = {}, cacheKel = {};
+
+  function setOptions(selId, items, selectedVal) {
+    const sel = document.getElementById(selId);
+    sel.innerHTML = '<option value="">-- Pilih --</option>';
+    items.forEach(function(it) {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = it.nama;
+      if (selectedVal && it.nama === selectedVal) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  function loadProvinsi(prefix, selectedVal) {
+    var p = new Promise(function(resolve) {
+      if (cacheProv.length) {
+        setOptions(prefix + '_provinsi', cacheProv, selectedVal);
+        resolve();
+        return;
+      }
+      fetch(API_PROV)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          cacheProv = data;
+          setOptions(prefix + '_provinsi', data, selectedVal);
+          resolve();
+        });
+    });
+    return p;
+  }
+
+  function loadKabupaten(prefix, selectedVal) {
+    var p = new Promise(function(resolve) {
+      var selProv = document.getElementById(prefix + '_provinsi');
+      var provNama = selProv.options[selProv.selectedIndex] ? selProv.value : '';
+      document.getElementById(prefix + '_kota').innerHTML = '<option value="">-- Pilih Kota --</option>';
+      document.getElementById(prefix + '_kecamatan').innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
+      document.getElementById(prefix + '_kelurahan').innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+      if (!provNama) { resolve(); return; }
+      var provId = findProvId(provNama);
+      if (!provId) { resolve(); return; }
+      if (cacheKab[provId]) {
+        setOptions(prefix + '_kota', cacheKab[provId], selectedVal);
+        resolve();
+        return;
+      }
+      fetch(API_KAB + provId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          cacheKab[provId] = data;
+          setOptions(prefix + '_kota', data, selectedVal);
+          resolve();
+        });
+    });
+    return p;
+  }
+
+  function loadKecamatan(prefix, selectedVal) {
+    var p = new Promise(function(resolve) {
+      var selKota = document.getElementById(prefix + '_kota');
+      var kabNama = selKota.options[selKota.selectedIndex] ? selKota.value : '';
+      document.getElementById(prefix + '_kecamatan').innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
+      document.getElementById(prefix + '_kelurahan').innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+      if (!kabNama) { resolve(); return; }
+      var fullId = findKabId(kabNama);
+      if (!fullId) { resolve(); return; }
+      if (cacheKec[fullId]) {
+        setOptions(prefix + '_kecamatan', cacheKec[fullId], selectedVal);
+        resolve();
+        return;
+      }
+      fetch(API_KEC + fullId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          cacheKec[fullId] = data;
+          setOptions(prefix + '_kecamatan', data, selectedVal);
+          resolve();
+        });
+    });
+    return p;
+  }
+
+  function loadKelurahan(prefix, selectedVal) {
+    var p = new Promise(function(resolve) {
+      var selKec = document.getElementById(prefix + '_kecamatan');
+      var kecNama = selKec.options[selKec.selectedIndex] ? selKec.value : '';
+      document.getElementById(prefix + '_kelurahan').innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+      if (!kecNama) { resolve(); return; }
+      var kecId = findKecId(kecNama);
+      if (!kecId) { resolve(); return; }
+      if (cacheKel[kecId]) {
+        setOptions(prefix + '_kelurahan', cacheKel[kecId], selectedVal);
+        resolve();
+        return;
+      }
+      fetch(API_KEL + kecId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          cacheKel[kecId] = data;
+          setOptions(prefix + '_kelurahan', data, selectedVal);
+          resolve();
+        });
+    });
+    return p;
+  }
+
+  function findProvId(nama) {
+    for (var i = 0; i < cacheProv.length; i++) {
+      if (cacheProv[i].nama === nama) return cacheProv[i].id;
+    }
+    return null;
+  }
+
+  function findKabId(nama) {
+    for (var pid in cacheKab) {
+      var list = cacheKab[pid];
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].nama === nama) return list[i].id;
+      }
+    }
+    return null;
+  }
+
+  function findKecId(nama) {
+    for (var kid in cacheKec) {
+      var list = cacheKec[kid];
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].nama === nama) return list[i].id;
+      }
+    }
+    return null;
+  }
+
+  // ── On page load: populate provinsi ──
+  loadProvinsi('add');
+
+  function bukaModal() {
+    document.getElementById("modalOverlay").classList.add("open");
+    loadProvinsi('add');
+  }
+  function tutupModal() {
+    document.getElementById("modalOverlay").classList.remove("open");
+  }
+  function tutupModalEdit() {
+    document.getElementById("modalEdit").classList.remove("open");
+  }
+
+  const URL_GET = "{{ url_for('dashboard.get_program', program_id=0) }}".slice(0, -1);
+  const URL_EDIT = "{{ url_for('dashboard.edit_program', program_id=0) }}".slice(0, -1);
+
+  function bukaModalEdit(id) {
+    fetch(URL_GET + id)
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        document.getElementById("formEdit").action = URL_EDIT + d.id;
+        document.getElementById("edit_nama").value = d.nama_program;
+        document.getElementById("edit_kategori").value = d.kategori || "";
+        document.getElementById("edit_bulan").value = d.bulan || "";
+        document.getElementById("edit_tahun").value = d.tahun || "";
+        document.getElementById("edit_tanggal").value = d.tanggal_pelaksanaan || "";
+        document.getElementById("edit_nama_tempat").value = d.nama_tempat || "";
+        document.getElementById("edit_jumlah_relawan").value = d.jumlah_relawan || 0;
+        document.getElementById("edit_jumlah_penerima_manfaat").value = d.jumlah_penerima_manfaat || 0;
+        document.getElementById("edit_lama_kegiatan_menit").value = d.lama_kegiatan_menit || 0;
+        // Load wilayah cascading for edit using Promise chain
+        var provVal = d.provinsi || '', kotaVal = d.kota || '', kecVal = d.kecamatan || '', kelVal = d.kelurahan || '';
+        loadProvinsi('edit', provVal)
+          .then(function() {
+            document.getElementById("edit_provinsi").value = provVal;
+            if (!provVal) return;
+            return loadKabupaten('edit', kotaVal);
+          })
+          .then(function() {
+            document.getElementById("edit_kota").value = kotaVal;
+            if (!kotaVal) return;
+            return loadKecamatan('edit', kecVal);
+          })
+          .then(function() {
+            document.getElementById("edit_kecamatan").value = kecVal;
+            if (!kecVal) return;
+            return loadKelurahan('edit', kelVal);
+          })
+          .then(function() {
+            document.getElementById("edit_kelurahan").value = kelVal;
+          });
+        document.getElementById("modalEdit").classList.add("open");
+      });
+  }
+
+  // Auto-isi bulan & tahun saat tanggal dipilih (form Tambah)
+  const BULAN_NAMES_ID = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+  ];
+  function autoIsiBulanTahunAdd(input) {
+    if (!input.value) return;
+    var d = new Date(input.value + 'T00:00:00');
+    var selectBulan = document.querySelector('#modalOverlay select[name="bulan"]');
+    var inputTahun = document.getElementById("add_tahun");
+    if (selectBulan && !selectBulan.value)
+      selectBulan.value = BULAN_NAMES_ID[d.getMonth()];
+    if (inputTahun && !inputTahun.value) inputTahun.value = d.getFullYear();
+  }
+  function autoIsiBulanTahunEdit(input) {
+    if (!input.value) return;
+    var d = new Date(input.value + 'T00:00:00');
+    var selectBulan = document.getElementById("edit_bulan");
+    var inputTahun = document.getElementById("edit_tahun");
+    if (selectBulan && !selectBulan.value)
+      selectBulan.value = BULAN_NAMES_ID[d.getMonth()];
+    if (inputTahun && !inputTahun.value) inputTahun.value = d.getFullYear();
+  }
+
+  document.getElementById("searchInput").onkeydown = function (e) {
+    if (e.key === "Enter") {
+      var q = this.value.trim();
+      if (q) {
+        window.location.href = "{{ url_for('master.master_program') }}?q=" + encodeURIComponent(q);
+      } else {
+        window.location.href = "{{ url_for('master.master_program') }}";
+      }
+    }
+  };
+
+  // Show clear button if searching
+  var searchQuery = "{{ search_query or '' }}";
+  if (searchQuery) {
+    var input = document.getElementById("searchInput");
+    input.value = searchQuery;
+    var bar = input.parentElement;
+    var clearBtn = document.createElement("button");
+    clearBtn.innerHTML = "&times;";
+    clearBtn.type = "button";
+    clearBtn.style.cssText = "border:none;background:none;font-size:1.3rem;cursor:pointer;color:#999;padding:0 4px;";
+    clearBtn.onclick = function() { window.location.href = "{{ url_for('master.master_program') }}"; };
+    bar.appendChild(clearBtn);
+  }
+</script>
+{% endblock %}

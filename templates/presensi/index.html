@@ -1,0 +1,1618 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
+    <title>Presensi Wajah - Satu Amal</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background: #f0f2f5;
+      }
+
+      /* ── SIDEBAR ── */
+      .sidebar {
+        width: 260px;
+        height: 100vh;
+        background: linear-gradient(
+          180deg,
+          #0f3d99 0%,
+          #1f59d2 60%,
+          #2e73f2 100%
+        );
+        position: fixed;
+        top: 0;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1000;
+        overflow: hidden;
+      }
+      .sidebar.collapsed {
+        width: 70px;
+      }
+
+      .sidebar-profile {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 18px 16px;
+        background: rgba(0, 0, 0, 0.2);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        flex-shrink: 0;
+        overflow: hidden;
+        transition: padding 0.3s ease;
+      }
+      .sidebar.collapsed .sidebar-profile {
+        padding: 14px 0;
+        justify-content: center;
+      }
+      .sidebar-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #f5a623;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.88rem;
+        font-weight: 800;
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(245, 166, 35, 0.4);
+      }
+      .sidebar.collapsed .sidebar-avatar {
+        width: 38px;
+        height: 38px;
+        font-size: 0.82rem;
+      }
+      .sidebar-user-info {
+        overflow: hidden;
+        min-width: 0;
+      }
+      .sidebar-user-name {
+        display: block;
+        color: #fff;
+        font-size: 0.92rem;
+        font-weight: 700;
+        white-space: nowrap;
+        line-height: 1.3;
+      }
+      .sidebar-user-sub {
+        display: block;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.73rem;
+        white-space: nowrap;
+        margin-top: 2px;
+      }
+      .sidebar.collapsed .sidebar-user-info {
+        opacity: 0;
+        width: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+
+      .sidebar-toggle-wrap {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 8px 12px;
+        flex-shrink: 0;
+        background: rgba(0, 0, 0, 0.08);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .sidebar-toggle {
+        width: 30px;
+        height: 30px;
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        border: 1.5px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+      }
+      .sidebar-toggle:hover {
+        background: #f5a623;
+        border-color: #f5a623;
+        transform: scale(1.1);
+      }
+      .sidebar-toggle i {
+        transition: transform 0.3s ease;
+      }
+      .sidebar.collapsed .sidebar-toggle i {
+        transform: rotate(180deg);
+      }
+
+      .sidebar-menu {
+        padding: 12px 0;
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+      .sidebar-menu::-webkit-scrollbar {
+        width: 4px;
+      }
+      .sidebar-menu::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+      }
+
+      .menu-label {
+        padding: 12px 18px 4px;
+        font-size: 0.62rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.3);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        white-space: nowrap;
+        transition: opacity 0.2s;
+      }
+      .sidebar.collapsed .menu-label {
+        opacity: 0;
+      }
+      .menu-item {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 11px 18px;
+        color: rgba(255, 255, 255, 0.55);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+        font-weight: 500;
+        position: relative;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .menu-item::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: #f5a623;
+        transform: scaleY(0);
+        transition: transform 0.2s ease;
+        border-radius: 0 2px 2px 0;
+      }
+      .menu-item:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.07);
+      }
+      .menu-item:hover::before {
+        transform: scaleY(0.6);
+      }
+      .menu-item.active {
+        color: #fff;
+        font-weight: 700;
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .menu-item.active::before {
+        transform: scaleY(1);
+      }
+      .menu-item i {
+        width: 20px;
+        text-align: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+        color: rgba(255, 255, 255, 0.45);
+        transition: color 0.2s;
+      }
+      .menu-item:hover i,
+      .menu-item.active i {
+        color: #fff;
+      }
+      .menu-item span {
+        transition:
+          opacity 0.2s,
+          width 0.3s;
+        white-space: nowrap;
+      }
+      .sidebar.collapsed .menu-item span {
+        opacity: 0;
+        width: 0;
+        overflow: hidden;
+        pointer-events: none;
+        display: none;
+      }
+      .sidebar.collapsed .menu-item {
+        padding: 12px 0;
+        justify-content: center;
+        width: 70px;
+      }
+      .sidebar.collapsed .menu-item:hover {
+        background: rgba(255, 255, 255, 0.07);
+      }
+      .sidebar.collapsed .menu-item::before {
+        top: 0;
+        bottom: 0;
+        transform: scaleY(0);
+      }
+      .sidebar.collapsed .menu-item.active::before {
+        transform: scaleY(1);
+      }
+
+      .sidebar-footer {
+        padding: 10px 14px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.15);
+        flex-shrink: 0;
+      }
+      .btn-logout {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #f87171;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        padding: 10px 4px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .btn-logout:hover {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+        padding-left: 10px;
+      }
+      .btn-logout i {
+        flex-shrink: 0;
+        min-width: 20px;
+        text-align: center;
+        font-size: 1rem;
+      }
+      .btn-logout span {
+        transition:
+          opacity 0.2s,
+          width 0.3s;
+        white-space: nowrap;
+      }
+      .sidebar.collapsed .btn-logout span {
+        opacity: 0;
+        width: 0;
+        overflow: hidden;
+      }
+      .sidebar.collapsed .btn-logout {
+        justify-content: center;
+        padding: 10px 0;
+        width: 70px;
+      }
+      .sidebar.collapsed .btn-logout:hover {
+        padding-left: 0;
+        background: rgba(239, 68, 68, 0.1);
+      }
+
+      /* ── MOBILE HEADER ── */
+      .mobile-header {
+        display: none;
+        background: #fff;
+        padding: 12px 20px;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        z-index: 900;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+      .mobile-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .mobile-logo img {
+        height: 32px;
+      }
+      .mobile-logo span {
+        font-weight: 700;
+        color: #1f59d2;
+        font-size: 1rem;
+      }
+      .mobile-toggle-btn {
+        background: #f0f2f5;
+        border: none;
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        color: #1f59d2;
+        font-size: 1.1rem;
+        cursor: pointer;
+      }
+
+      /* ── MAIN ── */
+      .main {
+        margin-left: 260px;
+        padding: 30px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .main.expanded {
+        margin-left: 70px;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+      .topbar h1 {
+        font-size: 1.5rem;
+        color: #2c3e50;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .topbar h1 i {
+        color: #1f59d2;
+      }
+
+      .jam-box {
+        background: linear-gradient(135deg, #1f59d2, #2980d4);
+        border-radius: 14px;
+        padding: 22px;
+        color: #fff;
+        text-align: center;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 20px rgba(31, 89, 210, 0.3);
+      }
+      .jam-box .jam {
+        font-size: 2.8rem;
+        font-weight: 700;
+        letter-spacing: 4px;
+      }
+      .jam-box .tanggal {
+        opacity: 0.85;
+        font-size: 0.9rem;
+        margin-top: 4px;
+      }
+
+      .camera-wrapper {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+
+      .program-select-box {
+        background: #fff;
+        border-radius: 14px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        margin-bottom: 14px;
+      }
+      .program-select-box label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 8px;
+      }
+      .program-select-box label i {
+        color: #1f59d2;
+        margin-right: 6px;
+      }
+      .program-select {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1.5px solid #dde3ef;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        color: #333;
+        background: #f5f7fa;
+        appearance: none;
+        cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='%231a4f8a'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .camera-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 22px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+      }
+      .camera-card h3 {
+        font-size: 1rem;
+        color: #2c3e50;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      #video {
+        width: 100%;
+        border-radius: 10px;
+        background: #000;
+        aspect-ratio: 4/3;
+      }
+      #canvas {
+        display: none;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 22px;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        cursor: pointer;
+        border: none;
+        font-weight: 600;
+        transition: all 0.2s;
+        width: 100%;
+        margin-top: 10px;
+      }
+      .btn-primary {
+        background: #1f59d2;
+        color: #fff;
+      }
+      .btn-warning {
+        background: #f5a623;
+        color: #fff;
+      }
+
+      .status-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+      }
+      .status-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f2f5;
+        font-size: 0.9rem;
+      }
+      .badge-hadir {
+        background: #e3effd;
+        color: #1f59d2;
+        padding: 3px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+      }
+      .badge-belum {
+        background: #fde8e8;
+        color: #c0392b;
+        padding: 3px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+      }
+
+      /* NOTIF */
+      .notif-wrapper {
+        position: relative;
+        display: inline-block;
+      }
+      .notif-btn {
+        background: #fff;
+        border: 1px solid #dde3ef;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #444;
+        cursor: pointer;
+        transition: 0.2s;
+        position: relative;
+      }
+      .notif-btn:hover {
+        background: #f0f5fb;
+        color: #1f59d2;
+      }
+      .notif-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #e74c3c;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: bold;
+        border: 2px solid #fff;
+      }
+      .notif-dropdown {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 48px;
+        width: 320px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        overflow: hidden;
+        border: 1px solid #eee;
+        text-align: left;
+      }
+      .notif-wrapper.open .notif-dropdown {
+        display: block;
+      }
+      .notif-header {
+        padding: 12px 16px;
+        background: #fafafa;
+        border-bottom: 1px solid #eee;
+        font-weight: 600;
+        color: #333;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9rem;
+      }
+      .notif-body {
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .notif-item {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f5f5f5;
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        transition: 0.2s;
+        color: #444;
+        width: 100%;
+        border: none;
+        background: none;
+        cursor: pointer;
+        text-align: left;
+        font-family: inherit;
+      }
+      .notif-item:hover {
+        background: #f9fbfd;
+      }
+      .notif-item.unread {
+        background: #f0f5fb;
+      }
+      .notif-item i {
+        color: #1f59d2;
+        margin-top: 3px;
+        font-size: 1.1rem;
+      }
+      .notif-text {
+        font-size: 0.85rem;
+        line-height: 1.4;
+        color: #333;
+      }
+      .notif-time {
+        font-size: 0.7rem;
+        color: #999;
+        margin-top: 4px;
+        display: block;
+      }
+      .notif-empty {
+        padding: 20px;
+        text-align: center;
+        color: #888;
+        font-size: 0.85rem;
+      }
+
+      /* ── RESPONSIVE ── */
+      @media (max-width: 768px) {
+        .sidebar {
+          left: -260px;
+        }
+        .sidebar.show {
+          left: 0;
+        }
+        .main {
+          margin-left: 0 !important;
+          padding: 20px 15px;
+        }
+        .mobile-header {
+          display: flex;
+        }
+        .camera-wrapper {
+          grid-template-columns: 1fr;
+          gap: 20px;
+        }
+        .jam-box .jam {
+          font-size: 2.2rem;
+        }
+        .topbar h1 {
+          font-size: 1.25rem;
+        }
+        /* FIX 1: -webkit- prefix dulu, baru standard */
+        .sidebar-overlay {
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 950;
+          -webkit-backdrop-filter: blur(2px);
+          backdrop-filter: blur(2px);
+        }
+        .sidebar-overlay.show {
+          display: block;
+        }
+        .sidebar-toggle-wrap {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <header class="mobile-header">
+      <div class="mobile-logo">
+        <img
+          src="{{ url_for('static', filename='img/logo.png') }}"
+          alt="Logo"
+          onerror="this.style.display = 'none'"
+        />
+        <span>Satu Amal</span>
+      </div>
+      <!-- FIX mobile toggle button -->
+      <button
+        class="mobile-toggle-btn"
+        id="mobileToggle"
+        title="Buka Menu"
+        aria-label="Buka Menu"
+      >
+        <i class="fas fa-bars"></i>
+      </button>
+    </header>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-profile">
+        {%- set nm = current_user.nama.split() -%}
+        <div class="sidebar-avatar">
+          {{ nm[0][0]|upper }}{% if nm|length > 1 %}{{ nm[-1][0]|upper }}{%
+          endif %}
+        </div>
+        <div class="sidebar-user-info">
+          <span class="sidebar-user-name">{{ current_user.nama }}</span>
+          <span class="sidebar-user-sub"
+            >Relawan &middot; {{ current_user.kode_relawan }}</span
+          >
+        </div>
+      </div>
+      <div class="sidebar-toggle-wrap">
+        <!-- FIX 2: tambah title dan aria-label -->
+        <button
+          class="sidebar-toggle"
+          id="sidebarToggle"
+          title="Toggle Sidebar"
+          aria-label="Toggle Sidebar"
+        >
+          <i class="fas fa-chevron-left"></i>
+        </button>
+      </div>
+      <div class="sidebar-menu">
+        <div class="menu-label">Menu</div>
+        <a href="{{ url_for('relawan.index') }}" class="menu-item">
+          <i class="fas fa-home"></i><span> Dashboard</span>
+        </a>
+        <div class="menu-label">Kegiatan</div>
+        <a href="{{ url_for('presensi.index') }}" class="menu-item active">
+          <i class="fas fa-camera"></i><span> Presensi Wajah</span>
+        </a>
+        <a
+          href="{{ url_for('relawan.tugas_evaluasi') }}"
+          class="menu-item"
+          title="Tugas Evaluasi"
+        >
+          <i class="fas fa-clipboard-check"></i><span> Tugas Evaluasi</span>
+        </a>
+        <div class="menu-label">Akun</div>
+        <a href="{{ url_for('relawan.profil') }}" class="menu-item">
+          <i class="fas fa-user-cog"></i><span> Profil Saya</span>
+        </a>
+      </div>
+      <div class="sidebar-footer">
+        <a href="{{ url_for('auth.logout') }}" class="btn-logout">
+          <i class="fas fa-sign-out-alt"></i><span> Logout</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="main" id="mainContent">
+      <div class="topbar">
+        <h1><i class="fas fa-camera"></i> Presensi Wajah</h1>
+        <div style="display: flex; align-items: center; gap: 15px">
+          <div class="notif-wrapper" id="notifWrapper">
+            <button
+              class="notif-btn"
+              title="Notifikasi"
+              aria-label="Notifikasi"
+              onclick="
+                document.getElementById('notifWrapper').classList.toggle('open')
+              "
+            >
+              <i class="fas fa-bell"></i>
+              {% if unread_notifications|length > 0 %}
+              <span class="notif-badge">{{ unread_notifications|length }}</span>
+              {% endif %}
+            </button>
+            <div class="notif-dropdown">
+              <div class="notif-header"><span>Notifikasi Terbaru</span></div>
+              <div class="notif-body">
+                {% if unread_notifications|length > 0 %} {% for notif in
+                unread_notifications %}
+                <form
+                  action="{{ url_for('auth.baca_notifikasi', notif_id=notif.id) }}"
+                  method="POST"
+                  style="margin: 0"
+                >
+                  <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                  />
+                  <button type="submit" class="notif-item unread">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                      <div class="notif-text">{{ notif.pesan }}</div>
+                      <span class="notif-time"
+                        >{{ notif.created_at.strftime('%d %b %Y, %H:%M')
+                        }}</span
+                      >
+                    </div>
+                  </button>
+                </form>
+                {% endfor %} {% else %}
+                <div class="notif-empty">Belum ada notifikasi baru.</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="jam-box">
+        <div class="jam" id="jam">--:--:--</div>
+        <div class="tanggal" id="tanggal"></div>
+      </div>
+
+      <div class="program-select-box">
+        <label for="programSelect"
+          ><i class="fas fa-hands-helping"></i> Pilih Nama Program</label
+        >
+        <select
+          id="programSelect"
+          class="program-select"
+          title="Pilih Nama Program"
+          aria-label="Pilih Nama Program"
+          onchange="tampilInfoProgram()"
+        >
+          <option value="">— Pilih Program —</option>
+          {% for program in programs %}
+          <option
+            value="{{ program.nama_program }}"
+            data-program-id="{{ program.id }}"
+            data-tanggal="{{ program.tanggal_pelaksanaan.strftime('%d %B %Y') if program.tanggal_pelaksanaan else (program.bulan + ' ' + program.tahun|string if program.bulan else '-') }}"
+            data-lokasi="{{ program.kota or '-' }}"
+            data-tempat="{{ program.nama_tempat or '-' }}"
+          >
+            {{ program.nama_program }}
+          </option>
+          {% endfor %}
+        </select>
+
+        <!-- Info program setelah pilih -->
+        <div
+          id="infoProgram"
+          style="
+            display: none;
+            margin-top: 12px;
+            padding: 12px 14px;
+            background: #f0f5fb;
+            border-radius: 10px;
+            border-left: 3px solid #1f59d2;
+          "
+        >
+          <div
+            style="
+              font-size: 0.83rem;
+              color: #555;
+              display: flex;
+              flex-direction: column;
+              gap: 5px;
+            "
+          >
+            <span
+              ><i
+                class="fas fa-calendar-alt"
+                style="color: #1f59d2; width: 16px"
+              ></i>
+              <strong>Tanggal:</strong> <span id="infTanggal"></span
+            ></span>
+            <span
+              ><i
+                class="fas fa-map-marker-alt"
+                style="color: #1f59d2; width: 16px"
+              ></i>
+              <strong>Kota:</strong> <span id="infLokasi"></span
+            ></span>
+            <span
+              ><i
+                class="fas fa-building"
+                style="color: #1f59d2; width: 16px"
+              ></i>
+              <strong>Tempat:</strong> <span id="infTempat"></span
+            ></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="upload-foto-box" id="uploadFotoBox" style="display:none">
+        <h3><i class="fas fa-images"></i> Upload Foto Kegiatan</h3>
+        <p style="font-size:0.85rem;color:#666;margin-bottom:10px;">
+          Upload minimal <strong>4 foto</strong> kegiatan sebagai bukti sebelum absen keluar.
+        </p>
+        <div class="foto-grid" id="fotoGrid">
+          <div class="foto-slot upload-slot" id="uploadSlot" onclick="document.getElementById('fileInput').click()">
+            <i class="fas fa-plus" style="font-size:2rem;color:#aaa"></i>
+            <span style="font-size:0.8rem;color:#aaa;margin-top:6px">Tambah Foto</span>
+          </div>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="uploadFoto(this)">
+        <div id="fotoCounter" style="margin-top:8px;font-size:0.85rem;color:#555;text-align:center">0 / 4 foto</div>
+        <div id="uploadStatus" style="margin-top:6px;font-size:0.8rem;text-align:center"></div>
+      </div>
+
+      <style>
+        .upload-foto-box {
+          background:#fff; border-radius:14px; padding:18px;
+          box-shadow:0 4px 20px rgba(0,0,0,0.06); margin:18px 0;
+        }
+        .foto-grid { display:flex; flex-wrap:wrap; gap:10px; }
+        .foto-slot {
+          width:100px; height:100px; border-radius:10px;
+          display:flex; flex-direction:column; align-items:center; justify-content:center;
+          position:relative; overflow:hidden;
+        }
+        .upload-slot {
+          border:2px dashed #ccc; cursor:pointer; background:#f9f9f9;
+        }
+        .upload-slot:hover { border-color:#1f59d2; background:#eef3fb; }
+        .foto-preview {
+          width:100%; height:100%; object-fit:cover; border-radius:10px;
+          border:1.5px solid #e0e0e0;
+        }
+        .foto-delete {
+          position:absolute; top:3px; right:3px; width:22px; height:22px;
+          border-radius:50%; background:rgba(192,57,43,0.85); color:#fff;
+          border:none; font-size:0.7rem; cursor:pointer; display:flex;
+          align-items:center; justify-content:center;
+        }
+        .foto-delete:hover { background:#c0392b; }
+      </style>
+
+      <div class="camera-wrapper">
+        <div class="camera-card">
+          <h3><i class="fas fa-video"></i> Kamera</h3>
+          <div
+            style="
+              position: relative;
+              width: 100%;
+              border-radius: 10px;
+              overflow: hidden;
+              background: #000;
+              aspect-ratio: 4/3;
+            "
+          >
+            <video
+              id="video"
+              autoplay
+              playsinline
+              style="width: 100%; height: 100%; object-fit: cover"
+            ></video>
+            <canvas
+              id="drawCanvas"
+              style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+              "
+            ></canvas>
+          </div>
+          <canvas id="canvas" style="display: none"></canvas>
+
+          <div
+            id="livenessBox"
+            style="
+              display: none;
+              flex-direction: column;
+              align-items: center;
+              padding: 14px;
+              border-radius: 12px;
+              border: 2px solid #1f59d2;
+              background: #e3effd;
+              margin-top: 12px;
+              text-align: center;
+            "
+          >
+            <div id="livenessIcon" style="font-size: 2rem">👁️</div>
+            <p id="livenessMsg" style="font-weight: 600; color: #1f59d2">
+              Silakan kedipkan mata Anda
+            </p>
+            <p
+              id="debugEar"
+              style="font-size: 0.7rem; color: #999; margin: 2px 0"
+            >
+              EAR: -
+            </p>
+            <button
+              onclick="cancelLiveness()"
+              style="
+                background: transparent;
+                color: #888;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                padding: 5px 12px;
+                cursor: pointer;
+                font-size: 0.8rem;
+              "
+            >
+              Batal
+            </button>
+          </div>
+
+          <div
+            style="
+              margin-top: 14px;
+              margin-bottom: 8px;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              padding: 10px 14px;
+              background: #e3effd;
+              border: 1.5px solid #1f59d2;
+              border-radius: 10px;
+            "
+          >
+            <i class="fas fa-shield-alt" style="color: #1f59d2"></i>
+            <span style="font-size: 0.88rem; font-weight: 600; color: #1f59d2"
+              >Liveness aktif — ikuti tantangan sebelum scan</span
+            >
+          </div>
+
+          <button
+            id="btnScan"
+            class="btn btn-primary"
+            onclick="handleScanClick('scan')"
+          >
+            Scan Presensi
+          </button>
+          {% if not current_user.face_encoding %}
+          <button
+            id="btnDaftar"
+            class="btn btn-warning"
+            onclick="handleScanClick('daftar')"
+          >
+            Daftar Wajah Baru
+          </button>
+          {% endif %}
+          <div
+            id="resultBox"
+            style="
+              display: none;
+              padding: 12px;
+              border-radius: 10px;
+              margin-top: 14px;
+              text-align: center;
+              font-weight: 500;
+            "
+          ></div>
+        </div>
+
+        <div class="status-card">
+          <h3><i class="fas fa-info-circle"></i> Status Hari Ini</h3>
+          <div class="status-item">
+            <span class="label">Nama</span
+            ><span class="value">{{ current_user.nama }}</span>
+          </div>
+          <div class="status-item">
+            <span class="label">Kode</span
+            ><span class="value">{{ current_user.kode_relawan }}</span>
+          </div>
+          <div class="status-item">
+            <span class="label">Status</span>
+            <span class="value">
+              {% if presensi_list %}<span class="badge-hadir"
+                >{{ presensi_list|length }} Program</span
+              >
+              {% else %}<span class="badge-belum">Belum Presensi</span>{% endif
+              %}
+            </span>
+          </div>
+          <div style="margin-top: 14px">
+            <p
+              style="
+                font-size: 0.75rem;
+                color: #888;
+                font-weight: 700;
+                text-transform: uppercase;
+              "
+            >
+              Rincian Program
+            </p>
+            <div id="rincianProgram">
+              {% for p in presensi_list %}
+              <div
+                class="presensi-card"
+                style="background:#f5f8ff; border-radius:10px; padding:10px; margin-top:8px; border-left:3px solid {{ '#2ecc71' if p.jam_keluar else '#f5a623' }};"
+              >
+                <div style="font-size: 0.85rem; font-weight: 600">
+                  {{ p.nama_program }}
+                </div>
+                <div style="font-size: 0.8rem; color: #666">
+                  Masuk: {{ p.jam_masuk.strftime('%H:%M') }} | Keluar: {{
+                  p.jam_keluar.strftime('%H:%M') if p.jam_keluar else 'Belum' }}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3/drawing_utils.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/face_mesh.js"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      // @ts-nocheck
+      const sidebar = document.getElementById("sidebar");
+      const main = document.getElementById("mainContent");
+      const overlay = document.getElementById("sidebarOverlay");
+      const mobileBtn = document.getElementById("mobileToggle");
+
+      if (
+        localStorage.getItem("sidebarCollapsed") === "true" &&
+        window.innerWidth > 768
+      ) {
+        sidebar.classList.add("collapsed");
+        main.classList.add("expanded");
+      }
+      document.getElementById("sidebarToggle").addEventListener("click", () => {
+        sidebar.classList.toggle("collapsed");
+        main.classList.toggle("expanded");
+        localStorage.setItem(
+          "sidebarCollapsed",
+          sidebar.classList.contains("collapsed"),
+        );
+      });
+      if (mobileBtn)
+        mobileBtn.onclick = () => {
+          sidebar.classList.add("show");
+          overlay.classList.add("show");
+        };
+      if (overlay)
+        overlay.onclick = () => {
+          sidebar.classList.remove("show");
+          overlay.classList.remove("show");
+        };
+
+      document.addEventListener("click", (e) => {
+        const w = document.getElementById("notifWrapper");
+        if (w && !w.contains(e.target)) w.classList.remove("open");
+      });
+
+      function updateJam() {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2,'0');
+        const m = String(now.getMinutes()).padStart(2,'0');
+        const s = String(now.getSeconds()).padStart(2,'0');
+        document.getElementById("jam").textContent = h + ':' + m + ':' + s;
+        document.getElementById("tanggal").textContent = now.toLocaleDateString(
+          "id-ID",
+          { weekday: "long", year: "numeric", month: "long", day: "numeric" },
+        );
+      }
+      updateJam();
+      setInterval(updateJam, 1000);
+
+      let uploadedFotoCount = 0;
+
+      function uploadFoto(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const sel = document.getElementById('programSelect');
+        if (!sel.value) { alert('Pilih program terlebih dahulu.'); input.value = ''; return; }
+        const programId = sel.options[sel.selectedIndex].dataset.programId;
+        const csrf = document.querySelector('meta[name="csrf-token"]').content;
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('program_id', programId);
+        const statusEl = document.getElementById('uploadStatus');
+        statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengupload...';
+        fetch('/presensi/upload-foto', {
+          method: 'POST', headers: { 'X-CSRFToken': csrf }, body: fd
+        })
+        .then(r => r.json())
+        .then(d => {
+          input.value = '';
+          if (d.success) {
+            uploadFotoSuccess(d.filename, d.total);
+            statusEl.innerHTML = '<span style="color:#27ae60">Foto berhasil diupload!</span>';
+          } else {
+            statusEl.innerHTML = '<span style="color:#c0392b">' + d.message + '</span>';
+          }
+        })
+        .catch(e => {
+          input.value = '';
+          statusEl.innerHTML = '<span style="color:#c0392b">Gagal upload: ' + e.message + '</span>';
+        });
+      }
+
+      function uploadFotoSuccess(filename, total) {
+        uploadedFotoCount = total;
+        const grid = document.getElementById('fotoGrid');
+        const uploadSlot = document.getElementById('uploadSlot');
+        const preview = document.createElement('div');
+        preview.className = 'foto-slot';
+        preview.innerHTML = '<img class="foto-preview" src="/presensi/uploads/' + filename + '?t=' + Date.now() + '">' +
+          '<button class="foto-delete" onclick="hapusFoto(this, \'' + filename + '\')">&times;</button>';
+        grid.insertBefore(preview, uploadSlot);
+        document.getElementById('fotoCounter').textContent = total + ' / 4 foto';
+        if (total >= 4) {
+          uploadSlot.style.display = 'none';
+          document.getElementById('fotoCounter').innerHTML = '<span style="color:#27ae60;font-weight:600">' + total + ' / 4 foto (lengkap!)</span>';
+        } else {
+          document.getElementById('fotoCounter').innerHTML = total + ' / 4 foto <span style="color:#c0392b;font-weight:600">(minimal 4)</span>';
+        }
+      }
+
+      function hapusFoto(btn, filename) {
+        btn.parentElement.remove();
+        uploadedFotoCount = Math.max(0, uploadedFotoCount - 1);
+        document.getElementById('fotoCounter').textContent = uploadedFotoCount + ' / 4 foto';
+        document.getElementById('uploadSlot').style.display = 'flex';
+      }
+
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      navigator.mediaDevices
+        .getUserMedia({
+          video: { facingMode: "user", width: 320, height: 240 },
+        })
+        .then((s) => {
+          video.srcObject = s;
+          setTimeout(() => initFaceMesh().catch(() => {}), 1500);
+        })
+        .catch((e) =>
+          showResult(
+            "\u274C Tidak dapat mengakses kamera: " + e.message,
+            false,
+          ),
+        );
+
+      const RIGHT_EYE = [33, 160, 158, 133, 153, 144];
+      const LEFT_EYE = [362, 385, 387, 263, 373, 380];
+      const EAR_THRESHOLD = 0.22;
+      const MIN_CLOSED_FRAMES = 1;
+
+      let faceMeshInstance = null,
+        livenessActive = false,
+        currentAction = null,
+        animFrameId = null;
+      let eyeClosedFrames = 0,
+        currentChallenge = "blink",
+        challengeState = 0,
+        livenessPassedFlag = false;
+
+      function euclidean(a, b) {
+        return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+      }
+      function calcEAR(landmarks, idx) {
+        const p = idx.map((i) => landmarks[i]);
+        return (
+          (euclidean(p[1], p[5]) + euclidean(p[2], p[4])) /
+          (2.0 * euclidean(p[0], p[3]))
+        );
+      }
+
+      async function initFaceMesh() {
+        if (faceMeshInstance) return faceMeshInstance;
+        const fm = new FaceMesh({
+          locateFile: (f) =>
+            `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/${f}`,
+        });
+        fm.setOptions({
+          maxNumFaces: 1,
+          refineLandmarks: true,
+          minDetectionConfidence: 0.5,
+          minTrackingConfidence: 0.5,
+        });
+        fm.onResults(onFaceMeshResults);
+        await fm.initialize();
+        faceMeshInstance = fm;
+        return fm;
+      }
+
+      function onFaceMeshResults(results) {
+        if (!livenessActive) return;
+        const livenessMsg = document.getElementById("livenessMsg");
+        const livenessIcon = document.getElementById("livenessIcon");
+        const debugEar = document.getElementById("debugEar");
+        try {
+          const drawCanvas = document.getElementById("drawCanvas");
+          const ctx = drawCanvas.getContext("2d");
+          drawCanvas.width = video.videoWidth;
+          drawCanvas.height = video.videoHeight;
+          ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+          if (
+            !results.multiFaceLandmarks ||
+            results.multiFaceLandmarks.length === 0
+          ) {
+            livenessMsg.textContent =
+              "\u26A0\uFE0F Wajah tidak terdeteksi. Hadapkan wajah ke kamera.";
+            livenessIcon.textContent = "\uD83D\uDE36";
+            debugEar.textContent = "EAR: -";
+            return;
+          }
+          const lm = results.multiFaceLandmarks[0];
+          if (typeof FACEMESH_TESSELLATION !== "undefined")
+            drawConnectors(ctx, lm, FACEMESH_TESSELLATION, {
+              color: "rgba(31,89,210,0.5)",
+              lineWidth: 1,
+            });
+          if (typeof FACEMESH_RIGHT_EYE !== "undefined")
+            drawConnectors(ctx, lm, FACEMESH_RIGHT_EYE, {
+              color: "#f5a623",
+              lineWidth: 2,
+            });
+          if (typeof FACEMESH_LEFT_EYE !== "undefined")
+            drawConnectors(ctx, lm, FACEMESH_LEFT_EYE, {
+              color: "#f5a623",
+              lineWidth: 2,
+            });
+          const ear = (calcEAR(lm, RIGHT_EYE) + calcEAR(lm, LEFT_EYE)) / 2;
+          const nose = lm[1].x,
+            leftEdge = lm[234].x,
+            rightEdge = lm[454].x;
+          const yawRatio = (nose - leftEdge) / (rightEdge - leftEdge);
+          if (currentChallenge === "blink") {
+            debugEar.textContent = `EAR: ${ear.toFixed(3)}`;
+            if (ear < EAR_THRESHOLD) {
+              eyeClosedFrames++;
+              livenessIcon.textContent = "\uD83D\uDE11";
+              livenessMsg.textContent =
+                "Mata tertutup... sekarang BUKA mata Anda";
+            } else {
+              if (eyeClosedFrames >= MIN_CLOSED_FRAMES) {
+                finishLiveness();
+                return;
+              }
+              eyeClosedFrames = 0;
+              livenessIcon.textContent = "\uD83D\uDC41\uFE0F";
+              livenessMsg.textContent = "Tantangan: KEDIPKAN mata 1 kali";
+            }
+          } else if (currentChallenge === "turn_left") {
+            debugEar.textContent = `Yaw: ${yawRatio.toFixed(3)}`;
+            if (yawRatio < 0.3) {
+              challengeState = 1;
+              livenessIcon.textContent = "\u2B05\uFE0F";
+              livenessMsg.textContent = "Bagus! Sekarang lihat LURUS ke kamera";
+            } else if (
+              yawRatio > 0.4 &&
+              yawRatio < 0.6 &&
+              challengeState === 1
+            ) {
+              finishLiveness();
+              return;
+            } else if (challengeState === 0) {
+              livenessIcon.textContent = "\u2B05\uFE0F";
+              livenessMsg.textContent = "Tantangan: TOLEH kepala ke KIRI";
+            }
+          } else if (currentChallenge === "turn_right") {
+            debugEar.textContent = `Yaw: ${yawRatio.toFixed(3)}`;
+            if (yawRatio > 0.7) {
+              challengeState = 1;
+              livenessIcon.textContent = "\u27A1\uFE0F";
+              livenessMsg.textContent = "Bagus! Sekarang lihat LURUS ke kamera";
+            } else if (
+              yawRatio > 0.4 &&
+              yawRatio < 0.6 &&
+              challengeState === 1
+            ) {
+              finishLiveness();
+              return;
+            } else if (challengeState === 0) {
+              livenessIcon.textContent = "\u27A1\uFE0F";
+              livenessMsg.textContent = "Tantangan: TOLEH kepala ke KANAN";
+            }
+          }
+        } catch (err) {
+          debugEar.textContent = "Error: " + err.message;
+          console.error(err);
+        }
+      }
+
+      async function runFaceMeshLoop(fm) {
+        if (!livenessActive) return;
+        try {
+          await fm.send({ image: video });
+          animFrameId = requestAnimationFrame(() => runFaceMeshLoop(fm));
+        } catch (err) {
+          document.getElementById("debugEar").textContent =
+            "Loop Err: " + err.message;
+          console.error(err);
+        }
+      }
+
+      function finishLiveness() {
+        livenessActive = false;
+        livenessPassedFlag = true;
+        const drawCanvas = document.getElementById("drawCanvas");
+        drawCanvas
+          .getContext("2d")
+          .clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+        cancelAnimationFrame(animFrameId);
+        document.getElementById("livenessIcon").textContent = "\u2705";
+        document.getElementById("livenessMsg").textContent =
+          "Tantangan berhasil! Memverifikasi wajah...";
+        setTimeout(() => executeAction(currentAction), 400);
+      }
+
+      function handleScanClick(action) {
+        if (
+          action === "scan" &&
+          !document.getElementById("programSelect").value
+        ) {
+          alert("Harap pilih program terlebih dahulu.");
+          return;
+        }
+        livenessPassedFlag = false;
+        startLiveness(action);
+      }
+
+      async function startLiveness(action) {
+        if (
+          action === "scan" &&
+          !document.getElementById("programSelect").value
+        ) {
+          alert("Harap pilih program terlebih dahulu.");
+          return;
+        }
+        currentAction = action;
+        eyeClosedFrames = 0;
+        challengeState = 0;
+        livenessActive = true;
+        const CHALLENGES = ["blink", "turn_left", "turn_right"];
+        currentChallenge =
+          CHALLENGES[Math.floor(Math.random() * CHALLENGES.length)];
+        const livenessBox = document.getElementById("livenessBox");
+        const livenessMsg = document.getElementById("livenessMsg");
+        const livenessIcon = document.getElementById("livenessIcon");
+        const debugEar = document.getElementById("debugEar");
+        livenessBox.style.display = "flex";
+        livenessIcon.textContent = "\u23F3";
+        livenessMsg.textContent = "Memuat model deteksi wajah...";
+        debugEar.textContent = "EAR: -";
+        document.getElementById("resultBox").style.display = "none";
+        try {
+          const fm = await initFaceMesh();
+          livenessIcon.textContent = "\uD83D\uDC41\uFE0F";
+          livenessMsg.textContent = "Kedipkan mata 1 kali untuk melanjutkan";
+          runFaceMeshLoop(fm);
+        } catch (e) {
+          livenessActive = false;
+          livenessBox.style.display = "none";
+          showResult("\u274C Gagal memuat model: " + e.message, false);
+        }
+      }
+
+      function cancelLiveness() {
+        livenessActive = false;
+        livenessPassedFlag = false;
+        cancelAnimationFrame(animFrameId);
+        document.getElementById("livenessBox").style.display = "none";
+        eyeClosedFrames = 0;
+        challengeState = 0;
+      }
+
+      function captureImage() {
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        canvas.getContext("2d").drawImage(video, 0, 0);
+        return canvas.toDataURL("image/jpeg", 0.85);
+      }
+
+      function showResult(msg, success) {
+        const box = document.getElementById("resultBox");
+        box.style.display = "block";
+        box.innerHTML = msg;
+        box.style.background = success ? "#e3effd" : "#fde8e8";
+        box.style.color = success ? "#1f59d2" : "#c0392b";
+        box.style.border = `1.5px solid ${success ? "#1f59d2" : "#c0392b"}`;
+      }
+
+      function playSuccessSound() {
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(880, ctx.currentTime);
+          osc.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0, ctx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05);
+          gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.3);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      function playErrorSound() {
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(300, ctx.currentTime);
+          osc.frequency.setValueAtTime(250, ctx.currentTime + 0.2);
+          gain.gain.setValueAtTime(0, ctx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
+          gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.4);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.4);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      function executeAction(action) {
+        document.getElementById("livenessBox").style.display = "none";
+        showResult(
+          '<i class="fas fa-spinner fa-spin"></i> Memverifikasi wajah ke server...',
+          true,
+        );
+        const img = captureImage();
+        const sel = document.getElementById("programSelect");
+        const prog = sel.value;
+        const programId = sel.options[sel.selectedIndex].dataset.programId || 0;
+        const csrf = document.querySelector('meta[name="csrf-token"]').content;
+        const url =
+          action === "scan" ? "/presensi/scan" : "/presensi/daftar-wajah";
+        const blinkVerified = livenessPassedFlag;
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
+          body: JSON.stringify({
+            image: img,
+            nama_program: prog,
+            program_id: parseInt(programId),
+            blink_verified: blinkVerified,
+          }),
+        })
+          .then((r) => r.json())
+          .then((d) => {
+            showResult(
+              (d.success ? "\u2705 " : "\u274C ") + d.message,
+              d.success,
+            );
+            if (d.success) {
+              playSuccessSound();
+              livenessPassedFlag = false;
+              setTimeout(function(){ location.reload(); }, 2500);
+            } else {
+              playErrorSound();
+              livenessPassedFlag = false;
+              if (d.need_photos) {
+                document.getElementById("uploadFotoBox").style.display = "block";
+                cekStatusUpload();
+              }
+            }
+          })
+          .catch((e) => {
+            showResult("\u274C Kesalahan koneksi: " + e.message, false);
+            livenessPassedFlag = false;
+          });
+      }
+      function tampilInfoProgram() {
+        const sel = document.getElementById("programSelect");
+        const info = document.getElementById("infoProgram");
+        const opt = sel.options[sel.selectedIndex];
+        if (!sel.value) {
+          info.style.display = "none";
+          return;
+        }
+        document.getElementById("infTanggal").textContent =
+          opt.dataset.tanggal || "-";
+        document.getElementById("infLokasi").textContent =
+          opt.dataset.lokasi || "-";
+        document.getElementById("infTempat").textContent =
+          opt.dataset.tempat || "-";
+        info.style.display = "block";
+        cekStatusUpload();
+      }
+
+      function cekStatusUpload() {
+        const sel = document.getElementById("programSelect");
+        const box = document.getElementById("uploadFotoBox");
+        if (!sel.value) { box.style.display = "none"; return; }
+        const programId = sel.options[sel.selectedIndex].dataset.programId;
+        const progName = sel.value;
+        const cards = document.querySelectorAll('.presensi-card');
+        let hasCheckIn = false;
+        cards.forEach(function(el) {
+          if (el.textContent.indexOf(progName) !== -1 && el.textContent.indexOf('Belum') !== -1) {
+            hasCheckIn = true;
+          }
+        });
+        if (hasCheckIn && programId) {
+          box.style.display = 'block';
+          cekFotoTerupload(programId);
+        } else {
+          box.style.display = 'none';
+        }
+      }
+
+      function cekFotoTerupload(programId) {
+        const csrf = document.querySelector('meta[name="csrf-token"]').content;
+        fetch('/presensi/cek-foto', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+          body: JSON.stringify({ program_id: parseInt(programId) })
+        })
+        .then(r => r.json())
+        .then(d => {
+          uploadedFotoCount = d.count;
+          document.getElementById('fotoCounter').textContent = d.count + ' / ' + d.required + ' foto';
+          if (d.count >= d.required) {
+            document.getElementById('fotoCounter').innerHTML = '<span style="color:#27ae60;font-weight:600">' + d.count + ' / ' + d.required + ' foto (lengkap!)</span>';
+          } else {
+            document.getElementById('fotoCounter').innerHTML = d.count + ' / ' + d.required + ' foto <span style="color:#c0392b;font-weight:600">(minimal 4)</span>';
+          }
+        })
+        .catch(() => {});
+      }
+
+      setTimeout(function() { cekStatusUpload(); }, 500);
+    </script>
+  </body>
+</html>

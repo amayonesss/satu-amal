@@ -1,0 +1,1 @@
+from .routes import master_bp

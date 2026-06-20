@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tambah Program - Satu Amal</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background: #f0f2f5;
+      }
+      .sidebar {
+        width: 260px;
+        height: 100vh;
+        background: linear-gradient(
+          180deg,
+          #0f3d99 0%,
+          #1f59d2 60%,
+          #2e73f2 100%
+        );
+        position: fixed;
+        top: 0;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 200;
+        overflow: hidden;
+      }
+      .sidebar.collapsed {
+        width: 70px;
+      }
+      .sidebar-toggle {
+        position: absolute;
+        top: 14px;
+        right: -16px;
+        width: 32px;
+        height: 32px;
+        background: #1f59d2;
+        color: #fff;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        z-index: 201;
+        transition: all 0.3s ease;
+      }
+      .sidebar-toggle:hover {
+        background: #f5a623;
+      }
+      .sidebar-toggle i {
+        transition: transform 0.3s ease;
+      }
+      .sidebar.collapsed .sidebar-toggle i {
+        transform: rotate(180deg);
+      }
+      .sidebar-logo {
+        text-align: center;
+        padding: 22px 12px 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(0, 0, 0, 0.12);
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+      .sidebar-logo img {
+        width: 130px;
+        height: auto;
+        transition: all 0.3s ease;
+      }
+      .sidebar.collapsed .sidebar-logo img {
+        width: 44px;
+      }
+      .sidebar-logo small {
+        display: block;
+        margin-top: 8px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        white-space: nowrap;
+        transition: opacity 0.2s;
+      }
+      .sidebar.collapsed .sidebar-logo small {
+        opacity: 0;
+      }
+      .sidebar-menu {
+        padding: 12px 0;
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+      .menu-label {
+        padding: 10px 20px 4px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.35);
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        white-space: nowrap;
+        transition: opacity 0.2s;
+      }
+      .sidebar.collapsed .menu-label {
+        opacity: 0;
+      }
+      .menu-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 22px;
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: all 0.25s ease;
+        font-size: 0.92rem;
+        font-weight: 500;
+        position: relative;
+        border-radius: 0 28px 28px 0;
+        margin-right: 14px;
+        white-space: nowrap;
+      }
+      .menu-item:hover {
+        background: rgba(255, 255, 255, 0.13);
+        color: #fff;
+        transform: translateX(3px);
+      }
+      .menu-item.active {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+      }
+      .menu-item i {
+        width: 22px;
+        text-align: center;
+        font-size: 1.05rem;
+        flex-shrink: 0;
+      }
+      .menu-item span {
+        transition: opacity 0.2s;
+      }
+      .sidebar.collapsed .menu-item span {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .sidebar.collapsed .menu-item {
+        padding: 14px 24px;
+        justify-content: center;
+        margin-right: 0;
+        border-radius: 0;
+      }
+      .sidebar-footer {
+        padding: 14px 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(0, 0, 0, 0.12);
+        flex-shrink: 0;
+      }
+      .btn-logout {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: rgba(255, 255, 255, 0.75);
+        text-decoration: none;
+        font-size: 0.9rem;
+        padding: 9px 12px;
+        border-radius: 10px;
+        transition: all 0.25s ease;
+        white-space: nowrap;
+      }
+      .btn-logout:hover {
+        color: #fff;
+        background: rgba(231, 76, 60, 0.22);
+      }
+      .btn-logout i {
+        flex-shrink: 0;
+      }
+      .btn-logout span {
+        transition: opacity 0.2s;
+      }
+      .sidebar.collapsed .btn-logout span {
+        opacity: 0;
+      }
+      .sidebar.collapsed .btn-logout {
+        justify-content: center;
+        padding: 9px;
+      }
+
+      .main {
+        margin-left: 260px;
+        padding: 30px;
+        transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .main.expanded {
+        margin-left: 70px;
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 28px;
+      }
+      .topbar h1 {
+        font-size: 1.5rem;
+        color: #2c3e50;
+      }
+
+      .card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 28px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        max-width: 700px;
+      }
+      .card h3 {
+        font-size: 1.05rem;
+        color: #2c3e50;
+        margin-bottom: 22px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #f0f2f5;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .card h3 i {
+        color: #1f59d2;
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .form-group {
+        margin-bottom: 16px;
+      }
+      .form-group label {
+        display: block;
+        font-size: 0.85rem;
+        color: #555;
+        font-weight: 500;
+        margin-bottom: 6px;
+      }
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid #dde3ef;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        color: #2c3e50;
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+      .form-group input:focus,
+      .form-group select:focus {
+        border-color: #1f59d2;
+        box-shadow: 0 0 0 3px rgba(31, 89, 210, 0.1);
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 22px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        border: none;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+      }
+      .btn-primary {
+        background: #1f59d2;
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: #1646ad;
+        transform: translateY(-1px);
+      }
+      .btn-secondary {
+        background: #e2e8f0;
+        color: #4a5568;
+      }
+      .btn-secondary:hover {
+        background: #cbd5e0;
+      }
+      .alert {
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 18px;
+        font-size: 0.9rem;
+      }
+      .alert-danger {
+        background: #fde8e8;
+        color: #c0392b;
+        border-left: 4px solid #c0392b;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar" id="sidebar">
+      <button class="sidebar-toggle" id="sidebarToggle">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <div class="sidebar-logo">
+        <img
+          src="{{ url_for('static', filename='img/logo.png') }}"
+          alt="Satu Amal Indonesia"
+        />
+        <small>Admin Panel</small>
+      </div>
+      <div class="sidebar-menu">
+        <div class="menu-label">Menu Utama</div>
+        <a
+          href="{{ url_for('dashboard.index') }}"
+          class="menu-item active"
+          title="Dashboard"
+        >
+          <i class="fas fa-chart-pie"></i><span> Dashboard</span>
+        </a>
+        <div class="menu-label">Master Data</div>
+        <a
+          href="{{ url_for('master.master_relawan') }}"
+          class="menu-item"
+          title="Master Relawan"
+        >
+          <i class="fas fa-id-card"></i><span> Master Relawan</span>
+        </a>
+        <a
+          href="{{ url_for('master.master_program') }}"
+          class="menu-item"
+          title="Master Program"
+        >
+          <i class="fas fa-list-alt"></i><span> Master Program</span>
+        </a>
+
+        <div class="menu-label">Akun</div>
+        <a
+          href="{{ url_for('dashboard.profil') }}"
+          class="menu-item"
+          title="Profil Saya"
+        >
+          <i class="fas fa-user-cog"></i><span> Profil Saya</span>
+        </a>
+      </div>
+      <div class="sidebar-footer">
+        <a href="{{ url_for('auth.logout') }}" class="btn-logout">
+          <i class="fas fa-sign-out-alt"></i><span> Logout</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="main" id="mainContent">
+      <div class="topbar">
+        <h1>
+          <i
+            class="fas fa-plus-circle"
+            style="color: #1f59d2; margin-right: 8px"
+          ></i
+          >Tambah Program
+        </h1>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %} {% for
+      cat, msg in messages %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+      {% endfor %} {% endwith %}
+
+      <div class="card">
+        <h3><i class="fas fa-calendar-plus"></i> Form Program Baru</h3>
+        <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <div class="form-group">
+              <label>Kategori</label>
+              <select name="kategori">
+                <option value="">-- Pilih Kategori --</option>
+                <option value="Event Sosial">Event Sosial</option>
+                <option value="Lingkungan">Lingkungan</option>
+                <option value="Palestina">Palestina</option>
+                <option value="Pangan">Pangan</option>
+                <option value="Pemberdayaan">Pemberdayaan</option>
+                <option value="Pendidikan">Pendidikan</option>
+                <option value="Respon Bencana (Bantuan Air Bersih)">
+                  Respon Bencana (Bantuan Air Bersih)
+                </option>
+                <option value="Respon Bencana (Bantuan Kesehatan)">
+                  Respon Bencana (Bantuan Kesehatan)
+                </option>
+                <option value="Respon Bencana (Kebutuhan Sekolah)">
+                  Respon Bencana (Kebutuhan Sekolah)
+                </option>
+                <option value="Respon Bencana (Pangan)">
+                  Respon Bencana (Pangan)
+                </option>
+                <option value="Respon Bencana (Recovery)">
+                  Respon Bencana (Recovery)
+                </option>
+                <option value="Respon Bencana (Psikososial)">
+                  Respon Bencana (Psikososial)
+                </option>
+                <option value="Syiar & Dakwah">Syiar &amp; Dakwah</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Bulan</label>
+              <select name="bulan">
+                <option value="">-- Pilih Bulan --</option>
+                <option>Januari</option>
+                <option>Februari</option>
+                <option>Maret</option>
+                <option>April</option>
+                <option>Mei</option>
+                <option>Juni</option>
+                <option>Juli</option>
+                <option>Agustus</option>
+                <option>September</option>
+                <option>Oktober</option>
+                <option>November</option>
+                <option>Desember</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tahun</label>
+              <input
+                type="number"
+                name="tahun"
+                placeholder="2024"
+                min="2020"
+                max="2030"
+              />
+            </div>
+            <div>
+              <label
+                style="
+                  display: block;
+                  font-size: 0.85rem;
+                  font-weight: 500;
+                  color: #555;
+                  margin-bottom: 6px;
+                "
+                >Jumlah Relawan</label
+              >
+              <input
+                type="number"
+                name="jumlah_relawan"
+                placeholder="0"
+                min="0"
+                style="
+                  width: 100%;
+                  padding: 10px 14px;
+                  border: 1.5px solid #dde3ef;
+                  border-radius: 8px;
+                  font-size: 0.9rem;
+                  outline: none;
+                "
+              />
+            </div>
+            <div>
+              <label
+                style="
+                  display: block;
+                  font-size: 0.85rem;
+                  font-weight: 500;
+                  color: #555;
+                  margin-bottom: 6px;
+                "
+                >Jumlah Penerima Manfaat</label
+              >
+              <input
+                type="number"
+                name="jumlah_penerima_manfaat"
+                placeholder="0"
+                min="0"
+                style="
+                  width: 100%;
+                  padding: 10px 14px;
+                  border: 1.5px solid #dde3ef;
+                  border-radius: 8px;
+                  font-size: 0.9rem;
+                  outline: none;
+                "
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Nama Tempat Kegiatan</label>
+            <input
+              type="text"
+              name="nama_tempat"
+              class="form-control"
+              placeholder="Contoh: Aula Masjid Al-Ikhlas"
+            />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Provinsi</label>
+              <select name="provinsi" id="add_provinsi" onchange="loadKabupaten('add')" style="width:100%;padding:10px 14px;border:1.5px solid #dde3ef;border-radius:8px;font-size:.9rem;outline:none">
+                <option value="">-- Pilih Provinsi --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Kota/Kabupaten</label>
+              <select name="kota" id="add_kota" onchange="loadKecamatan('add')" style="width:100%;padding:10px 14px;border:1.5px solid #dde3ef;border-radius:8px;font-size:.9rem;outline:none">
+                <option value="">-- Pilih Kota --</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Kecamatan</label>
+              <select name="kecamatan" id="add_kecamatan" onchange="loadKelurahan('add')" style="width:100%;padding:10px 14px;border:1.5px solid #dde3ef;border-radius:8px;font-size:.9rem;outline:none">
+                <option value="">-- Pilih Kecamatan --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Kelurahan</label>
+              <select name="kelurahan" id="add_kelurahan" style="width:100%;padding:10px 14px;border:1.5px solid #dde3ef;border-radius:8px;font-size:.9rem;outline:none">
+                <option value="">-- Pilih Kelurahan --</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Lama Kegiatan (menit)</label>
+            <input
+              type="number"
+              name="lama_kegiatan_menit"
+              placeholder="Contoh: 120"
+              min="0"
+              style="
+                width: 100%;
+                padding: 10px 14px;
+                border: 1.5px solid #dde3ef;
+                border-radius: 8px;
+                font-size: 0.9rem;
+                outline: none;
+              "
+            />
+          </div>
+          <div style="display: flex; gap: 12px; margin-top: 8px">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Simpan Program
+            </button>
+            <a
+              href="{{ url_for('master.master_program') }}"
+              class="btn btn-secondary"
+            >
+              <i class="fas fa-arrow-left"></i> Batal
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      var sidebar = document.getElementById("sidebar");
+      var main = document.getElementById("mainContent");
+      if (localStorage.getItem("sidebarCollapsed") === "true") {
+        sidebar.classList.add("collapsed");
+        main.classList.add("expanded");
+      }
+      document.getElementById("sidebarToggle").addEventListener("click", function() {
+        sidebar.classList.toggle("collapsed");
+        main.classList.toggle("expanded");
+        localStorage.setItem("sidebarCollapsed", sidebar.classList.contains("collapsed"));
+      });
+
+      // ── Cascading selects wilayah ──
+      var cacheProv = [], cacheKab = {}, cacheKec = {}, cacheKel = {};
+      var API_PROV = "{{ url_for('wilayah.provinsi') }}";
+      var API_KAB  = "{{ url_for('wilayah.kabupaten', prov_id='') }}";
+      var API_KEC  = "{{ url_for('wilayah.kecamatan', kab_id='') }}";
+      var API_KEL  = "{{ url_for('wilayah.kelurahan', kec_id='') }}";
+
+      function setOptions(selId, items) {
+        var sel = document.getElementById(selId);
+        sel.innerHTML = '<option value="">-- Pilih --</option>';
+        items.forEach(function(it) {
+          var opt = document.createElement('option');
+          opt.value = opt.textContent = it.nama;
+          sel.appendChild(opt);
+        });
+      }
+
+      function loadProvinsi(prefix) {
+        if (cacheProv.length) { setOptions(prefix + '_provinsi', cacheProv); return; }
+        fetch(API_PROV).then(function(r) { return r.json(); }).then(function(data) {
+          cacheProv = data;
+          setOptions(prefix + '_provinsi', data);
+        });
+      }
+
+      function findProvId(nama) {
+        for (var i = 0; i < cacheProv.length; i++) {
+          if (cacheProv[i].nama === nama) return cacheProv[i].id;
+        }
+        return null;
+      }
+
+      function loadKabupaten(prefix) {
+        var sel = document.getElementById(prefix + '_provinsi');
+        var provNama = sel.options[sel.selectedIndex] ? sel.value : '';
+        document.getElementById(prefix + '_kota').innerHTML = '<option value="">-- Pilih Kota --</option>';
+        document.getElementById(prefix + '_kecamatan').innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
+        document.getElementById(prefix + '_kelurahan').innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+        if (!provNama) return;
+        var provId = findProvId(provNama);
+        if (!provId) return;
+        if (cacheKab[provId]) { setOptions(prefix + '_kota', cacheKab[provId]); return; }
+        fetch(API_KAB + provId).then(function(r) { return r.json(); }).then(function(data) {
+          cacheKab[provId] = data;
+          setOptions(prefix + '_kota', data);
+        });
+      }
+
+      function loadKecamatan(prefix) {
+        var sel = document.getElementById(prefix + '_kota');
+        var kabNama = sel.options[sel.selectedIndex] ? sel.value : '';
+        document.getElementById(prefix + '_kecamatan').innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
+        document.getElementById(prefix + '_kelurahan').innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+        if (!kabNama) return;
+        var fullId = findKabId(kabNama);
+        if (!fullId) return;
+        if (cacheKec[fullId]) { setOptions(prefix + '_kecamatan', cacheKec[fullId]); return; }
+        fetch(API_KEC + fullId).then(function(r) { return r.json(); }).then(function(data) {
+          cacheKec[fullId] = data;
+          setOptions(prefix + '_kecamatan', data);
+        });
+      }
+
+      function loadKelurahan(prefix) {
+        var sel = document.getElementById(prefix + '_kecamatan');
+        var kecNama = sel.options[sel.selectedIndex] ? sel.value : '';
+        document.getElementById(prefix + '_kelurahan').innerHTML = '<option value="">-- Pilih Kelurahan --</option>';
+        if (!kecNama) return;
+        var kecId = findKecId(kecNama);
+        if (!kecId) return;
+        if (cacheKel[kecId]) { setOptions(prefix + '_kelurahan', cacheKel[kecId]); return; }
+        fetch(API_KEL + kecId).then(function(r) { return r.json(); }).then(function(data) {
+          cacheKel[kecId] = data;
+          setOptions(prefix + '_kelurahan', data);
+        });
+      }
+
+      function findKabId(nama) {
+        for (var pid in cacheKab) {
+          for (var i = 0; i < cacheKab[pid].length; i++) {
+            if (cacheKab[pid][i].nama === nama) return cacheKab[pid][i].id;
+          }
+        }
+        return null;
+      }
+
+      function findKecId(nama) {
+        for (var kid in cacheKec) {
+          for (var i = 0; i < cacheKec[kid].length; i++) {
+            if (cacheKec[kid][i].nama === nama) return cacheKec[kid][i].id;
+          }
+        }
+        return null;
+      }
+
+      loadProvinsi('add');
+    </script>
+  </body>
+</html>

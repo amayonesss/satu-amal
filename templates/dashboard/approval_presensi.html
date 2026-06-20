@@ -1,0 +1,219 @@
+{% extends 'base_admin.html' %} {% block extra_style %}
+.btn-foto { background: #e8effa; color: #1f59d2; border: 1px solid #1f59d2; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
+.btn-foto:hover { background: #1f59d2; color: #fff; }
+.modal-foto { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center; }
+.modal-foto.show { display:flex; }
+.modal-foto-content { background:#fff; border-radius:16px; padding:24px; max-width:700px; width:90%; max-height:90vh; overflow-y:auto; position:relative; }
+.modal-foto-close { position:absolute; top:12px; right:16px; font-size:1.5rem; color:#888; background:none; border:none; cursor:pointer; }
+.modal-foto-close:hover { color:#333; }
+.foto-grid-admin { display:flex; flex-wrap:wrap; gap:12px; margin-top:16px; }
+.foto-grid-admin img { width:150px; height:150px; object-fit:cover; border-radius:10px; border:1px solid #e0e0e0; }
+.topbar { display: flex;
+justify-content: space-between; align-items: center; margin-bottom: 28px; }
+.topbar h1 { font-size: 1.5rem; color: #1a2d4f; font-weight: 700; } .topbar
+small { color: #666; font-size: 0.9rem; } .approval-card { background: #fff;
+border-radius: 14px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+.approval-header { display: flex; align-items: center; gap: 12px; margin-bottom:
+20px; } .approval-header i { color: #f5a623; font-size: 1.5rem; }
+.approval-header h2 { font-size: 1.25rem; color: #2c3e50; } .table-responsive {
+overflow-x: auto; } .table-approval { width: 100%; border-collapse: collapse; }
+.table-approval th { background: #f0f5fb; padding: 12px 14px; text-align: left;
+font-size: 0.85rem; color: #4a5568; font-weight: 600; border-bottom: 2px solid
+#dde3ef; } .table-approval td { padding: 12px 14px; border-bottom: 1px solid
+#f0f2f5; font-size: 0.9rem; color: #444; vertical-align: middle; }
+.table-approval tr:hover { background: #fcfcfd; } .badge-pending { background:
+#fff3e0; color: #d68f1c; padding: 5px 12px; border-radius: 20px; font-size:
+0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+.action-buttons { display: flex; gap: 8px; } .btn-approve { background: #e3f9e5;
+color: #27ae60; border: 1px solid #27ae60; padding: 6px 12px; border-radius:
+6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s;
+display: flex; align-items: center; gap: 6px; } .btn-approve:hover { background:
+#27ae60; color: #fff; } .btn-reject { background: #fde8e8; color: #c0392b;
+border: 1px solid #c0392b; padding: 6px 12px; border-radius: 6px; font-size:
+0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex;
+align-items: center; gap: 6px; } .btn-reject:hover { background: #c0392b; color:
+#fff; } .empty-state { text-align: center; padding: 40px 20px; color: #888; }
+.empty-state i { font-size: 3rem; color: #ddd; margin-bottom: 15px; } {%
+endblock %} {% block content %}
+<div class="topbar">
+  <div>
+    <h1>Approval Presensi</h1>
+    <small>Verifikasi kehadiran relawan di lapangan</small>
+  </div>
+</div>
+
+<div class="approval-card">
+  <div class="approval-header">
+    <i class="fas fa-clipboard-check"></i>
+    <h2>Menunggu Verifikasi ({{ pending_list|length }})</h2>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table-approval">
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>Relawan</th>
+          <th>Program</th>
+          <th>Jam Masuk</th>
+          <th>Total Jam</th>
+          <th>Status</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in pending_list %}
+        <tr>
+          <td>{{ p.tanggal.strftime('%d %b %Y') }}</td>
+          <td>
+            <strong style="color: #1f59d2">{{ p.user.nama }}</strong><br />
+            <small style="color: #777">{{ p.user.kode_relawan }}</small>
+          </td>
+          <td>
+            <span
+              style="
+                background: #f0f5fb;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 0.85rem;
+                border: 1px solid #dde3ef;
+              "
+              >{{ p.nama_program }}</span
+            >
+          </td>
+          <td>{{ p.jam_masuk.strftime('%H:%M') if p.jam_masuk else '-' }}</td>
+          <td>
+            {% if p.total_jam %}
+            <strong>{{ p.total_jam }}</strong> jam {% else %}
+            <span style="color: #888; font-style: italic"
+              >Belum absen keluar</span
+            >
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge-pending"
+              ><i class="fas fa-clock"></i> Pending</span
+            >
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn-foto" onclick="lihatFoto({{ p.id }})" title="Lihat Foto Kegiatan">
+                <i class="fas fa-images"></i> Foto
+              </button>
+              {% if current_user.role == 'admin' %}
+              <form
+                action="{{ url_for('dashboard.approve_absen', presensi_id=p.id) }}"
+                method="POST"
+                style="margin: 0"
+              >
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="{{ csrf_token() }}"
+                />
+                <button
+                  type="submit"
+                  class="btn-approve"
+                  onclick="return confirm('Setujui kehadiran ini?');"
+                >
+                  <i class="fas fa-check"></i> Approve
+                </button>
+              </form>
+              <form
+                action="{{ url_for('dashboard.tolak_absen', presensi_id=p.id) }}"
+                method="POST"
+                style="margin: 0"
+              >
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="{{ csrf_token() }}"
+                />
+                <button
+                  type="submit"
+                  class="btn-reject"
+                  onclick="
+                    return confirm(
+                      'Tolak kehadiran ini? Data tidak akan masuk ke statistik.',
+                    );
+                  "
+                >
+                  <i class="fas fa-times"></i> Tolak
+                </button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <i class="fas fa-check-circle"></i>
+              <h3>Semua Tuntas!</h3>
+              <p>Tidak ada data presensi yang menunggu verifikasi saat ini.</p>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="modal-foto" id="modalFoto">
+  <div class="modal-foto-content">
+    <button class="modal-foto-close" onclick="document.getElementById('modalFoto').classList.remove('show')">&times;</button>
+    <h3 id="modalFotoTitle" style="color:#1a2d4f;font-size:1.2rem;margin-bottom:4px;">Foto Kegiatan</h3>
+    <p id="modalFotoSub" style="color:#888;font-size:0.9rem;margin-bottom:12px;"></p>
+    <div id="modalFotoRelawan" style="font-size:0.85rem;color:#555;margin-bottom:4px;"></div>
+    <div id="modalFotoGrid" class="foto-grid-admin"></div>
+    <div id="modalFotoEmpty" style="text-align:center;padding:30px;color:#aaa;display:none;">
+      <i class="fas fa-images" style="font-size:3rem;margin-bottom:10px;"></i>
+      <p>Belum ada foto kegiatan untuk presensi ini.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+function lihatFoto(presensiId) {
+  const modal = document.getElementById('modalFoto');
+  const grid = document.getElementById('modalFotoGrid');
+  const empty = document.getElementById('modalFotoEmpty');
+  const title = document.getElementById('modalFotoTitle');
+  const sub = document.getElementById('modalFotoSub');
+  const rel = document.getElementById('modalFotoRelawan');
+  grid.innerHTML = '';
+  empty.style.display = 'none';
+  title.textContent = 'Memuat...';
+  modal.classList.add('show');
+
+  fetch('/presensi/foto-presensi/' + presensiId)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.success) {
+        title.textContent = d.program;
+        sub.textContent = d.tanggal;
+        rel.textContent = 'Relawan: ' + d.relawan;
+        if (d.photos && d.photos.length > 0) {
+          d.photos.forEach(function(f) {
+            var img = document.createElement('img');
+            img.src = f.url + '?t=' + Date.now();
+            img.alt = 'Foto Kegiatan';
+            img.onerror = function() { this.style.display = 'none'; };
+            grid.appendChild(img);
+          });
+        } else {
+          empty.style.display = 'block';
+        }
+      } else {
+        title.textContent = 'Error';
+        sub.textContent = d.message;
+      }
+    })
+    .catch(function() {
+      title.textContent = 'Error';
+      sub.textContent = 'Gagal memuat foto.';
+    });
+}
+</script>
+{% endblock %}

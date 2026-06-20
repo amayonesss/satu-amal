@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Rekapitulasi Program - Satu Amal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        :root {
+            --primary: #1f59d2;
+            --primary-dark: #0f3d99;
+            --slate-800: #1e293b;
+            --slate-600: #475569;
+            --slate-100: #f1f5f9;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #f8fafc;
+            color: var(--slate-800);
+            padding-top: 80px; /* Space for floating bar */
+        }
+
+        /* ── FLOATING BAR (NO PRINT) ── */
+        .floating-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1.5px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        }
+        
+        .floating-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .floating-bar-left h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .floating-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-print {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(31, 89, 210, 0.2);
+        }
+
+        .btn-print:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-back {
+            background: var(--slate-100);
+            color: var(--slate-600);
+        }
+
+        .btn-back:hover {
+            background: #e2e8f0;
+            color: var(--slate-800);
+        }
+
+        /* ── REPORT CONTAINER (A4 PAGE MOCKUP) ── */
+        .report-page {
+            width: 21cm;
+            min-height: 29.7cm;
+            padding: 2.2cm;
+            margin: 0 auto 40px auto;
+            background: #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border-radius: 12px;
+            position: relative;
+        }
+
+        /* ── REPORT HEADER ── */
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 20px;
+            margin-bottom: 24px;
+        }
+
+        .logo-section h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+            letter-spacing: 0.5px;
+        }
+
+        .logo-section p {
+            font-size: 0.85rem;
+            color: var(--slate-600);
+            margin-top: 4px;
+        }
+
+        .meta-section {
+            text-align: right;
+            font-size: 0.82rem;
+            color: var(--slate-600);
+            line-height: 1.5;
+        }
+
+        .meta-section strong {
+            color: var(--slate-800);
+        }
+
+        /* ── REPORT TITLE ── */
+        .report-title {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .report-title h2 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--slate-800);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── KPI GRID ── */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .kpi-card {
+            background: var(--slate-100);
+            border-radius: 10px;
+            padding: 14px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .kpi-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--slate-600);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .kpi-value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        /* ── TWO COLUMN BREAKDOWN ── */
+        .columns-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .section-box h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ── TABLE STYLING ── */
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+            margin-bottom: 16px;
+        }
+
+        .report-table th {
+            background-color: var(--slate-100);
+            color: var(--slate-800);
+            font-weight: 700;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .report-table td {
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            color: var(--slate-800);
+        }
+
+        .report-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .report-table td.num {
+            text-align: right;
+        }
+
+        .report-table tr.total-row td {
+            font-weight: 700;
+            background-color: var(--slate-100);
+            border-top: 2px solid var(--slate-800);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 10px;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        /* ── PRINT-SPECIFIC CSS ── */
+        @media print {
+            body {
+                background-color: #fff;
+                padding-top: 0;
+            }
+
+            .floating-bar {
+                display: none !important;
+            }
+
+            .report-page {
+                width: 100% !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                border-radius: 0 !important;
+            }
+
+            /* Enable backgrounds to print */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .kpi-card {
+                background: #f1f5f9 !important;
+                border: 1px solid #cbd5e1 !important;
+            }
+
+            .report-table th {
+                background-color: #f1f5f9 !important;
+            }
+
+            .report-table tr:nth-child(even) td {
+                background-color: #f8fafc !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- FLOATING ACTIONS BAR (HIDDEN IN PRINT) -->
+    <div class="floating-bar">
+        <div class="floating-bar-left">
+            <h2>Pratinjau Laporan Program</h2>
+        </div>
+        <div class="floating-actions">
+            <button onclick="window.print()" class="btn-action btn-print">
+                <i class="fas fa-print"></i> Cetak / Simpan PDF
+            </button>
+            <a href="{{ back_url }}" class="btn-action btn-back">
+                <i class="fas fa-arrow-left"></i> Kembali
+            </a>
+        </div>
+    </div>
+
+    <!-- MAIN REPORT DOCUMENT -->
+    <div class="report-page">
+        <!-- HEADER -->
+        <header class="report-header">
+            <div class="logo-section">
+                <h1>SATU AMAL</h1>
+                <p>Aplikasi Manajemen Kegiatan dan Relawan Sosial</p>
+            </div>
+            <div class="meta-section">
+                Tanggal Cetak: <strong>{{ printed_at }}</strong><br>
+                Oleh: <strong>{{ printed_by }}</strong>
+            </div>
+        </header>
+
+        <!-- TITLE -->
+        <div class="report-title">
+            <h2>Laporan Rekapitulasi Program Kerja</h2>
+            {% if selected_bulan or selected_tahun %}
+            <p style="font-size: 0.95rem; font-weight: 600; color: var(--slate-600); margin-top: 6px;">
+                Periode: {% if selected_bulan %}{{ selected_bulan }}{% endif %} {% if selected_tahun %}{{ selected_tahun }}{% endif %}
+            </p>
+            {% endif %}
+        </div>
+
+        <!-- KPI SUMMARY CARDS -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">Total Program</div>
+                <div class="kpi-value">{{ total_program }}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Penerima Manfaat</div>
+                <div class="kpi-value">{{ "{:,}".format(total_penerima) }}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Lokasi Dijangkau</div>
+                <div class="kpi-value">{{ total_lokasi }}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Relawan Terdaftar</div>
+                <div class="kpi-value">{{ total_relawan }}</div>
+            </div>
+        </div>
+
+        <!-- TWO COLUMN BREAKDOWN -->
+        <div class="columns-grid">
+            <!-- LEFT COLUMN: CATEGORIES -->
+            <div class="section-box">
+                <h3><i class="fas fa-tags" style="color:var(--primary);"></i> Analisis Kategori</h3>
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Kategori</th>
+                            <th class="num" style="width: 70px;">Prog</th>
+                            <th class="num" style="width: 100px;">Total PM</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set ns = namespace(total_prog_sum=0, total_pm_sum=0) %}
+                        {% for r in kat_all_raw %}
+                            {% set ns.total_prog_sum = ns.total_prog_sum + r.jumlah_program %}
+                            {% set ns.total_pm_sum = ns.total_pm_sum + (r.total_pm or 0) %}
+                            <tr>
+                                <td>{{ r.kategori or 'Lainnya' }}</td>
+                                <td class="num">{{ r.jumlah_program }}</td>
+                                <td class="num">{{ "{:,}".format(r.total_pm or 0) }}</td>
+                            </tr>
+                        {% endfor %}
+                        <tr class="total-row">
+                            <td>Total</td>
+                            <td class="num">{{ ns.total_prog_sum }}</td>
+                            <td class="num">{{ "{:,}".format(ns.total_pm_sum) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- RIGHT COLUMN: LOCATIONS -->
+            <div class="section-box">
+                <h3><i class="fas fa-map-marker-alt" style="color:var(--primary);"></i> Top 5 Wilayah / Lokasi</h3>
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                        <th>Kota</th>
+                            <th class="num" style="width: 70px;">Prog</th>
+                            <th class="num" style="width: 100px;">Total PM</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set ns2 = namespace(total_loc_prog=0, total_loc_pm=0) %}
+                        {% for r in sebaran_raw[:5] %}
+                            {% set ns2.total_loc_prog = ns2.total_loc_prog + r.jumlah_program %}
+                            {% set ns2.total_loc_pm = ns2.total_loc_pm + (r.total_pm or 0) %}
+                            <tr>
+                                <td>{{ r.kota }}</td>
+                                <td class="num">{{ r.jumlah_program }}</td>
+                                <td class="num">{{ "{:,}".format(r.total_pm or 0) }}</td>
+                            </tr>
+                        {% endfor %}
+                        <tr class="total-row">
+                            <td>Total Top 5</td>
+                            <td class="num">{{ ns2.total_loc_prog }}</td>
+                            <td class="num">{{ "{:,}".format(ns2.total_loc_pm) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="font-size:0.75rem; text-align: center; color: var(--slate-600); margin-top:60px;">
+            Laporan ini dibuat secara otomatis oleh sistem Satu Amal.
+        </div>
+    </div>
+
+    <!-- DETAIL TABLE (ON PAGE 2 TO ENSURE NO AWKWARD BREAKS) -->
+    <div class="report-page page-break">
+        <header class="report-header">
+            <div class="logo-section">
+                <h1>SATU AMAL</h1>
+                <p>Aplikasi Manajemen Kegiatan dan Relawan Sosial</p>
+            </div>
+            <div class="meta-section">
+                Lampiran Laporan Program Kerja
+            </div>
+        </header>
+
+        <div class="section-box" style="margin-top: 10px;">
+            <h3 style="font-size: 1.1rem; border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 16px;">
+                <i class="fas fa-list-alt" style="color:var(--primary); margin-right: 6px;"></i> Lampiran: Daftar Detail Program
+            </h3>
+            
+            <table class="report-table" style="font-size: 0.76rem;">
+                <thead>
+                    <tr>
+                        <th style="width: 35px; text-align: center;">No</th>
+                        <th>Nama Program</th>
+                        <th>Kategori</th>
+                        <th>Lokasi</th>
+                        <th style="width: 100px; text-align: center;">Waktu</th>
+                        <th class="num" style="width: 65px;">Relawan</th>
+                        <th class="num" style="width: 75px;">Penerima</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set ns3 = namespace(total_rel_all=0, total_pm_all=0) %}
+                    {% for p in program_list %}
+                        {% set ns3.total_rel_all = ns3.total_rel_all + (p.jumlah_relawan or 0) %}
+                        {% set ns3.total_pm_all = ns3.total_pm_all + (p.jumlah_penerima_manfaat or 0) %}
+                        <tr>
+                            <td style="text-align: center;">{{ loop.index }}</td>
+                            <td><strong>{{ p.nama_program }}</strong></td>
+                            <td>{{ p.kategori or '-' }}</td>
+                            <td>{{ p.kota or '-' }}</td>
+                            <td style="text-align: center;">{{ (p.bulan + ' ' + p.tahun|string) if p.bulan else p.tahun|string }}</td>
+                            <td class="num">{{ p.jumlah_relawan or 0 }}</td>
+                            <td class="num">{{ "{:,}".format(p.jumlah_penerima_manfaat or 0) }}</td>
+                        </tr>
+                    {% endfor %}
+                    <tr class="total-row">
+                        <td colspan="5" style="text-align: right;">Total Keseluruhan</td>
+                        <td class="num">{{ ns3.total_rel_all }}</td>
+                        <td class="num">{{ "{:,}".format(ns3.total_pm_all) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>

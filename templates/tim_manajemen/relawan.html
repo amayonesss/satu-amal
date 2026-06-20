@@ -1,0 +1,176 @@
+{% extends "base_admin.html" %}
+
+{% block content %}
+<style>
+/* ── PAGINATION ── */
+.pagination-container .btn-page {
+    padding: 6px 12px; border: 1px solid #e5e7eb; border-radius: 6px;
+    background: #fff; color: #4b5563; cursor: pointer; font-size: 0.85rem;
+    transition: all 0.2s;
+}
+.pagination-container .btn-page:hover:not(:disabled) { background: #f9fafb; border-color: #1e40af; color: #1e40af; }
+.pagination-container .btn-page.active { background: #1e40af; color: #fff; border-color: #1e40af; font-weight: 600; }
+.pagination-container .btn-page:disabled { opacity: 0.5; cursor: not-allowed; }
+</style>
+
+<div style="padding: 2rem; font-family: 'Segoe UI', sans-serif;">
+
+  <!-- Card Wrapper -->
+  <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+
+    <!-- Header -->
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.2rem;">
+      <span style="font-size: 1.2rem;">☰</span>
+      <h2 style="font-size: 1.2rem; font-weight: 700; color: #1e3a5f; margin: 0;">Daftar Relawan</h2>
+    </div>
+
+    <!-- Search & Total -->
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.2rem; flex-wrap: wrap;">
+      <div style="position: relative; flex: 1; max-width: 380px;">
+        <span style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #9ca3af;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" stroke-width="2">
+    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </svg>
+</span>
+       <input type="text" id="searchInput" placeholder="Cari nama, kode, atau role..."
+  style="width: 100%; padding: 0.55rem 1rem 0.55rem 2.2rem; border: 1px solid #e5e7eb; border-radius: 999px; font-size: 0.88rem; outline: none; box-sizing: border-box; color: #374151; background: #f9fafb;">
+      </div>
+      <span style="color: #6b7280; font-size: 0.88rem; margin-left: auto;">
+        Total <strong>{{ relawan_list | length }}</strong> relawan
+      </span>
+    </div>
+
+    <!-- Table -->
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;" id="relawanTable">
+      <thead>
+        <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+          <th style="padding: 0.75rem 1rem; text-align: left; color: #6b7280; font-weight: 600;">No</th>
+          <th style="padding: 0.75rem 1rem; text-align: left; color: #6b7280; font-weight: 600;">Nama</th>
+          <th style="padding: 0.75rem 1rem; text-align: left; color: #6b7280; font-weight: 600;">Kode</th>
+          <th style="padding: 0.75rem 1rem; text-align: left; color: #6b7280; font-weight: 600;">Status</th>
+          <th style="padding: 0.75rem 1rem; text-align: left; color: #6b7280; font-weight: 600;">Bergabung</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for relawan in relawan_list %}
+        <tr style="border-bottom: 1px solid #f3f4f6; transition: background 0.15s;"
+            onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+          <td style="padding: 0.85rem 1rem; color: #9ca3af;">{{ loop.index }}</td>
+          <td style="padding: 0.85rem 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <div style="width: 36px; height: 36px; border-radius: 50%; background: #1e40af; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">
+                {{ relawan.nama[0].upper() }}
+              </div>
+              <span style="color: #1f2937; font-weight: 500;">{{ relawan.nama }}</span>
+            </div>
+          </td>
+          <td style="padding: 0.85rem 1rem;">
+            <span style="background: #f1f5f9; color: #475569; padding: 0.2rem 0.7rem; border-radius: 6px; font-size: 0.82rem; font-weight: 500;">
+              {{ relawan.kode_relawan }}
+            </span>
+          </td>
+          <td style="padding: 0.85rem 1rem;">
+            {% if relawan.aktif %}
+              <span style="background: #dcfce7; color: #15803d; padding: 0.2rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600;">✔ Aktif</span>
+            {% else %}
+              <span style="background: #f3f4f6; color: #6b7280; padding: 0.2rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600;">Nonaktif</span>
+            {% endif %}
+          </td>
+          <td style="padding: 0.85rem 1rem; color: #6b7280;">{{ relawan.created_at.strftime('%d-%m-%Y') }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" style="padding: 2rem; text-align: center; color: #9ca3af;">Tidak ada data relawan.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  </div>
+</div>
+
+<script>
+function initPagination(tableId, rowsPerPage, searchInputId) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    const allRows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('td[colspan]'));
+    if(allRows.length === 0) return;
+    
+    const paginationContainer = document.createElement('div');
+    paginationContainer.className = 'pagination-container';
+    paginationContainer.style.display = 'flex';
+    paginationContainer.style.justifyContent = 'center';
+    paginationContainer.style.alignItems = 'center';
+    paginationContainer.style.gap = '8px';
+    paginationContainer.style.marginTop = '20px';
+    
+    table.parentNode.insertBefore(paginationContainer, table.nextSibling);
+    
+    let currentPage = 1;
+    let filteredRows = allRows;
+    
+    function renderTable() {
+        const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+        if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+        
+        allRows.forEach(row => row.style.display = 'none');
+        
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        filteredRows.slice(start, end).forEach(row => row.style.display = '');
+        
+        renderPaginationControls(totalPages);
+    }
+    
+    function renderPaginationControls(totalPages) {
+        paginationContainer.innerHTML = '';
+        if (totalPages <= 1) return;
+        
+        const prevBtn = document.createElement('button');
+        prevBtn.innerHTML = '&#10094; Prev';
+        prevBtn.className = 'btn-page';
+        prevBtn.disabled = currentPage === 1;
+        prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderTable(); } };
+        paginationContainer.appendChild(prevBtn);
+        
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                const pageBtn = document.createElement('button');
+                pageBtn.textContent = i;
+                pageBtn.className = i === currentPage ? 'btn-page active' : 'btn-page';
+                pageBtn.onclick = () => { currentPage = i; renderTable(); };
+                paginationContainer.appendChild(pageBtn);
+            } else if (i === currentPage - 2 || i === currentPage + 2) {
+                const dots = document.createElement('span');
+                dots.textContent = '...';
+                paginationContainer.appendChild(dots);
+            }
+        }
+        
+        const nextBtn = document.createElement('button');
+        nextBtn.innerHTML = 'Next &#10095;';
+        nextBtn.className = 'btn-page';
+        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; renderTable(); } };
+        paginationContainer.appendChild(nextBtn);
+    }
+    
+    if (searchInputId) {
+        const searchInput = document.getElementById(searchInputId);
+        if (searchInput) {
+            searchInput.onkeyup = function() {
+                const q = this.value.toLowerCase().trim();
+                filteredRows = allRows.filter(row => row.textContent.toLowerCase().includes(q));
+                currentPage = 1;
+                renderTable();
+            };
+        }
+    }
+    renderTable();
+}
+
+initPagination('relawanTable', 10, 'searchInput');
+</script>
+{% endblock %}

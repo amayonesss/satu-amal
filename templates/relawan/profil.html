@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Saya - Satu Amal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: 260px; height: 100vh;
+            background: linear-gradient(180deg, #0f3d99 0%, #1f59d2 60%, #2e73f2 100%);
+            position: fixed; top: 0; left: 0;
+            display: flex; flex-direction: column;
+            box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+            transition: all 0.3s cubic-bezier(.4,0,.2,1);
+            z-index: 1000; overflow: hidden;
+        }
+        .sidebar.collapsed { width: 70px; }
+        .sidebar-profile {
+            display: flex; align-items: center; gap: 13px;
+            padding: 18px 16px; background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            flex-shrink: 0; overflow: hidden; transition: padding 0.3s ease;
+        }
+        .sidebar.collapsed .sidebar-profile { padding: 14px 0; justify-content: center; }
+        .sidebar-avatar {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: #f5a623; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.88rem; font-weight: 800; flex-shrink: 0;
+            transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(245,166,35,0.4);
+        }
+        .sidebar.collapsed .sidebar-avatar { width: 38px; height: 38px; font-size: 0.82rem; }
+        .sidebar-user-info { overflow: hidden; min-width: 0; }
+        .sidebar-user-name { display: block; color: #fff; font-size: 0.92rem; font-weight: 700; white-space: nowrap; line-height: 1.3; }
+        .sidebar-user-sub { display: block; color: rgba(255,255,255,0.5); font-size: 0.73rem; white-space: nowrap; margin-top: 2px; }
+        .sidebar.collapsed .sidebar-user-info { opacity: 0; width: 0; pointer-events: none; overflow: hidden; }
+        .sidebar-toggle-wrap {
+            display: flex; justify-content: center; align-items: center;
+            padding: 8px 12px; flex-shrink: 0;
+            background: rgba(0,0,0,0.08);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar-toggle {
+            width: 30px; height: 30px;
+            background: rgba(255,255,255,0.15); color: #fff;
+            border: 1.5px solid rgba(255,255,255,0.3);
+            border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; transition: all 0.3s ease; flex-shrink: 0;
+        }
+        .sidebar-toggle:hover { background: #f5a623; border-color: #f5a623; transform: scale(1.1); }
+        .sidebar-toggle i { transition: transform 0.3s ease; }
+        .sidebar.collapsed .sidebar-toggle i { transform: rotate(180deg); }
+        .sidebar-menu { padding: 12px 0; flex: 1; overflow-y: auto; overflow-x: hidden; }
+        .menu-label { padding: 12px 18px 4px; font-size: 0.62rem; font-weight: 700; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1.5px; white-space: nowrap; transition: opacity 0.2s; }
+        .sidebar.collapsed .menu-label { opacity: 0; }
+        .menu-item {
+            display: flex; align-items: center; gap: 13px;
+            padding: 11px 18px; color: rgba(255,255,255,0.55);
+            text-decoration: none; transition: all 0.2s ease;
+            font-size: 0.9rem; font-weight: 500; position: relative;
+            white-space: nowrap; overflow: hidden;
+        }
+        .menu-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: #f5a623; transform: scaleY(0); transition: transform 0.2s ease; border-radius: 0 2px 2px 0; }
+        .menu-item:hover { color: #fff; background: rgba(255,255,255,0.07); }
+        .menu-item:hover::before { transform: scaleY(0.6); }
+        .menu-item.active { color: #fff; font-weight: 700; background: rgba(255,255,255,0.08); }
+        .menu-item.active::before { transform: scaleY(1); }
+        .menu-item i { width: 20px; text-align: center; font-size: 1rem; flex-shrink: 0; color: rgba(255,255,255,0.45); transition: color 0.2s; }
+        .menu-item:hover i, .menu-item.active i { color: #fff; }
+        .menu-item span { transition: opacity 0.2s, width 0.3s; white-space: nowrap; }
+        .sidebar.collapsed .menu-item span { opacity: 0; width: 0; overflow: hidden; pointer-events: none; display: none; }
+        .sidebar.collapsed .menu-item { padding: 12px 0; justify-content: center; width: 70px; }
+        .sidebar.collapsed .menu-item:hover { background: rgba(255,255,255,0.07); }
+        .sidebar.collapsed .menu-item::before { top: 0; bottom: 0; transform: scaleY(0); }
+        .sidebar.collapsed .menu-item.active::before { transform: scaleY(1); }
+        .sidebar-footer { padding: 10px 14px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.15); flex-shrink: 0; }
+        .btn-logout { display: flex; align-items: center; gap: 12px; color: #f87171; text-decoration: none; font-size: 0.9rem; font-weight: 500; padding: 10px 4px; border-radius: 8px; transition: all 0.2s ease; white-space: nowrap; overflow: hidden; }
+        .btn-logout:hover { color: #ef4444; background: rgba(239,68,68,0.1); padding-left: 10px; }
+        .btn-logout i { flex-shrink: 0; min-width: 20px; text-align: center; font-size: 1rem; }
+        .btn-logout span { transition: opacity 0.2s, width 0.3s; white-space: nowrap; }
+        .sidebar.collapsed .btn-logout span { opacity: 0; width: 0; overflow: hidden; }
+        .sidebar.collapsed .btn-logout { justify-content: center; padding: 10px 0; width: 70px; }
+        .sidebar.collapsed .btn-logout:hover { padding-left: 0; background: rgba(239,68,68,0.1); }
+
+        /* ── MOBILE HEADER ── */
+        .mobile-header {
+            display: none; background: #fff; padding: 12px 20px;
+            align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 900;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .mobile-logo { display: flex; align-items: center; gap: 10px; }
+        .mobile-logo img { height: 32px; }
+        .mobile-logo span { font-weight: 700; color: #1f59d2; font-size: 1rem; }
+        .mobile-toggle-btn {
+            background: #f0f2f5; border: none; width: 38px; height: 38px;
+            border-radius: 10px; color: #1f59d2; font-size: 1.1rem; cursor: pointer;
+        }
+
+        /* ── MAIN ── */
+        .main { margin-left: 260px; padding: 30px; transition: all 0.3s cubic-bezier(.4,0,.2,1); }
+        .main.expanded { margin-left: 70px; }
+
+        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+        .topbar h1 { font-size: 1.5rem; color: #2c3e50; }
+        .topbar small { color: #666; font-size: 0.9rem; display: block; margin-top: 2px; }
+        .badge-relawan {
+            background: #1f59d2; color: #fff;
+            padding: 5px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;
+        }
+
+        /* ── PROFIL CARDS ── */
+        .profil-grid { display: grid; grid-template-columns: 300px 1fr; gap: 24px; align-items: start; }
+
+        .card-info {
+            background: #fff; border-radius: 16px; padding: 28px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06); text-align: center;
+        }
+        .avatar {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: linear-gradient(135deg, #1f59d2, #2980d4);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; color: #fff; margin: 0 auto 16px;
+        }
+        .card-info h4 { font-size: 1.1rem; color: #2c3e50; margin-bottom: 6px; }
+        .card-info .kode { color: #888; font-size: 0.9rem; margin-bottom: 10px; }
+        .badge-role {
+            display: inline-block; padding: 4px 14px;
+            border-radius: 20px; font-size: 0.78rem; font-weight: 600;
+            background: #e3effd; color: #1f59d2;
+        }
+        .info-list { margin-top: 20px; text-align: left; }
+        .info-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 0; border-bottom: 1px solid #f0f2f5;
+            font-size: 0.85rem;
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-row .label { color: #888; }
+        .info-row .value { color: #2c3e50; font-weight: 500; }
+
+        .card-form {
+            background: #fff; border-radius: 16px; padding: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 20px;
+        }
+        .card-form h3 {
+            font-size: 1rem; color: #2c3e50; margin-bottom: 18px;
+            display: flex; align-items: center; gap: 8px;
+            padding-bottom: 12px; border-bottom: 2px solid #f0f2f5;
+        }
+        .card-form h3 i { color: #1f59d2; }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 0.85rem; color: #555; font-weight: 500; margin-bottom: 6px; }
+        .form-group input {
+            width: 100%; padding: 12px 14px;
+            border: 1.5px solid #dde3ef; border-radius: 10px;
+            font-size: 0.95rem; color: #2c3e50; outline: none;
+            transition: all 0.2s;
+        }
+        .form-group input:focus {
+            border-color: #1f59d2;
+            box-shadow: 0 0 0 3px rgba(31,89,210,0.1);
+        }
+        .form-text { font-size: 0.78rem; color: #aab; margin-top: 4px; }
+
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 12px 22px; border-radius: 10px;
+            font-size: 0.95rem; cursor: pointer; border: none;
+            font-weight: 600; text-decoration: none; transition: all 0.2s;
+            width: 100%;
+        }
+        .btn-primary { background: #1f59d2; color: #fff; }
+        .btn-warning { background: #f5a623; color: #fff; }
+
+        /* Alert */
+        .alert {
+            padding: 12px 16px; border-radius: 10px; margin-bottom: 20px;
+            font-size: 0.9rem; display: flex; align-items: center; gap: 10px;
+        }
+        .alert-success { background: #e6f4ea; color: #1e7e34; }
+        .alert-danger  { background: #fde8e8; color: #c0392b; }
+        .alert-info    { background: #e3effd; color: #1f59d2; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 900px) {
+            .profil-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { left: -260px; }
+            .sidebar.show { left: 0; }
+            .main { margin-left: 0 !important; padding: 20px 15px; }
+            .mobile-header { display: flex; }
+            .topbar { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .topbar h1 { font-size: 1.25rem; }
+            .sidebar-overlay {
+                display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+                z-index: 950; backdrop-filter: blur(2px);
+            }
+            .sidebar-overlay.show { display: block; }
+            .sidebar-toggle-wrap { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<header class="mobile-header">
+    <div class="mobile-logo">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" onerror="this.style.display='none'">
+        <span>Satu Amal</span>
+    </div>
+    <button class="mobile-toggle-btn" id="mobileToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+</header>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-profile">
+        {%- set nm = current_user.nama.split() -%}
+        <div class="sidebar-avatar">{{ nm[0][0]|upper }}{% if nm|length > 1 %}{{ nm[-1][0]|upper }}{% endif %}</div>
+        <div class="sidebar-user-info">
+            <span class="sidebar-user-name">{{ current_user.nama }}</span>
+            <span class="sidebar-user-sub">Relawan &middot; {{ current_user.kode_relawan }}</span>
+        </div>
+    </div>
+    <div class="sidebar-toggle-wrap">
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+    </div>
+    <div class="sidebar-menu">
+        <div class="menu-label">Menu</div>
+        <a href="{{ url_for('relawan.index') }}" class="menu-item">
+            <i class="fas fa-home"></i><span> Dashboard</span>
+        </a>
+        <div class="menu-label">Kegiatan</div>
+        <a href="{{ url_for('presensi.index') }}" class="menu-item">
+            <i class="fas fa-camera"></i><span> Presensi Wajah</span>
+        </a>
+        <div class="menu-label">Akun</div>
+        <a href="{{ url_for('relawan.profil') }}" class="menu-item active">
+            <i class="fas fa-user-cog"></i><span> Profil Saya</span>
+        </a>
+    </div>
+    <div class="sidebar-footer">
+        <a href="{{ url_for('auth.logout') }}" class="btn-logout">
+            <i class="fas fa-sign-out-alt"></i><span> Logout</span>
+        </a>
+    </div>
+</div>
+
+<div class="main" id="mainContent">
+    <div class="topbar">
+        <div>
+            <h1><i class="fas fa-user-cog" style="color:#1f59d2"></i> Profil Saya</h1>
+            <small>Kelola akun dan keamanan</small>
+        </div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <!-- Notifikasi -->
+            <style>
+            .notif-wrapper { position: relative; display: inline-block; }
+            .notif-btn { background: #fff; border: 1px solid #dde3ef; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #444; cursor: pointer; transition: 0.2s; position: relative; }
+            .notif-btn:hover { background: #f0f5fb; color: #1f59d2; }
+            .notif-badge { position: absolute; top: -5px; right: -5px; background: #e74c3c; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; border: 2px solid #fff; }
+            .notif-dropdown { display: none; position: absolute; right: 0; top: 48px; width: 320px; background: #fff; border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.15); z-index: 1000; overflow: hidden; border: 1px solid #eee; text-align: left; }
+            .notif-wrapper.open .notif-dropdown { display: block; }
+            .notif-header { padding: 12px 16px; background: #fafafa; border-bottom: 1px solid #eee; font-weight: 600; color: #333; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
+            .notif-body { max-height: 300px; overflow-y: auto; }
+            .notif-item { padding: 12px 16px; border-bottom: 1px solid #f5f5f5; display: flex; gap: 12px; align-items: flex-start; transition: 0.2s; color: #444; width: 100%; border:none; background:none; cursor:pointer; text-align:left; font-family: inherit; }
+            .notif-item:hover { background: #f9fbfd; }
+            .notif-item.unread { background: #f0f5fb; }
+            .notif-item i { color: #1f59d2; margin-top: 3px; font-size: 1.1rem; }
+            .notif-text { font-size: 0.85rem; line-height: 1.4; color: #333; }
+            .notif-time { font-size: 0.7rem; color: #999; margin-top: 4px; display: block; }
+            .notif-empty { padding: 20px; text-align: center; color: #888; font-size: 0.85rem; }
+            </style>
+            <div class="notif-wrapper" id="notifWrapper">
+                <button class="notif-btn" onclick="document.getElementById('notifWrapper').classList.toggle('open')">
+                    <i class="fas fa-bell"></i>
+                    {% if unread_notifications|length > 0 %}
+                    <span class="notif-badge">{{ unread_notifications|length }}</span>
+                    {% endif %}
+                </button>
+                <div class="notif-dropdown">
+                    <div class="notif-header">
+                        <span>Notifikasi Terbaru</span>
+                    </div>
+                    <div class="notif-body">
+                        {% if unread_notifications|length > 0 %}
+                            {% for notif in unread_notifications %}
+                            <form action="{{ url_for('auth.baca_notifikasi', notif_id=notif.id) }}" method="POST" style="margin:0;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="notif-item unread">
+                                    <i class="fas fa-info-circle"></i>
+                                    <div>
+                                        <div class="notif-text">{{ notif.pesan }}</div>
+                                        <span class="notif-time">{{ notif.created_at.strftime('%d %b %Y, %H:%M') }}</span>
+                                    </div>
+                                </button>
+                            </form>
+                            {% endfor %}
+                        {% else %}
+                            <div class="notif-empty">Belum ada notifikasi baru.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <!-- End Notifikasi -->
+            
+            <span class="badge-relawan"><i class="fas fa-user"></i> Relawan</span>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+        <div class="alert alert-{{ cat }}">
+            <i class="fas fa-{{ 'check-circle' if cat == 'success' else 'exclamation-circle' }}"></i>
+            {{ msg }}
+        </div>
+        {% endfor %}
+    {% endwith %}
+
+    <div class="profil-grid">
+        <div class="card-info">
+            <div class="avatar"><i class="fas fa-user"></i></div>
+            <h4>{{ current_user.nama }}</h4>
+            <p class="kode">{{ current_user.kode_relawan }}</p>
+            <span class="badge-role">{{ current_user.role }}</span>
+            <div class="info-list">
+                <div class="info-row"><span class="label"><i class="fas fa-envelope"></i> Email</span><span class="value">{{ current_user.email or '-' }}</span></div>
+                <div class="info-row"><span class="label"><i class="fas fa-circle"></i> Status</span><span class="value" style="color:{{ '#27ae60' if current_user.aktif else '#e74c3c' }}">{{ 'Aktif' if current_user.aktif else 'Non-aktif' }}</span></div>
+                <div class="info-row"><span class="label"><i class="fas fa-calendar"></i> Bergabung</span><span class="value">{{ current_user.created_at.strftime('%d %b %Y') }}</span></div>
+            </div>
+        </div>
+
+        <div>
+            <div class="card-form">
+                <h3><i class="fas fa-id-card"></i> Kode Relawan</h3>
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="aksi" value="update_kode">
+                    <div class="form-group">
+                        <label>Kode Relawan</label>
+                        <input type="text" name="kode_relawan" value="{{ current_user.kode_relawan }}" required>
+                        <p class="form-text">Kode ini digunakan untuk login.</p>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan Kode</button>
+                </form>
+            </div>
+
+            <div class="card-form">
+                <h3><i class="fas fa-lock"></i> Ganti Password</h3>
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="aksi" value="ganti_password">
+                    <div class="form-group"><label>Password Lama</label><input type="password" name="password_lama" required></div>
+                    <div class="form-group"><label>Password Baru</label><input type="password" name="password_baru" required minlength="6"></div>
+                    <div class="form-group"><label>Konfirmasi Password Baru</label><input type="password" name="konfirmasi_password" required></div>
+                    <button type="submit" class="btn btn-warning"><i class="fas fa-key"></i> Ganti Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const sidebar = document.getElementById('sidebar');
+    const main    = document.getElementById('mainContent');
+    const overlay = document.getElementById('sidebarOverlay');
+    const mobileBtn = document.getElementById('mobileToggle');
+
+    if (localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth > 768) {
+        sidebar.classList.add('collapsed'); main.classList.add('expanded');
+    }
+    document.getElementById('sidebarToggle').addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed'); main.classList.toggle('expanded');
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+    });
+    if(mobileBtn) mobileBtn.onclick = () => { sidebar.classList.add('show'); overlay.classList.add('show'); };
+    if(overlay) overlay.onclick = () => { sidebar.classList.remove('show'); overlay.classList.remove('show'); };
+</script>
+</body>
+</html>

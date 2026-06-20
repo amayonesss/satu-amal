@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Relawan - Satu Amal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: 260px; height: 100vh;
+            background: linear-gradient(180deg, #0f3d99 0%, #1f59d2 60%, #2e73f2 100%);
+            position: fixed; top: 0; left: 0;
+            display: flex; flex-direction: column;
+            box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+            transition: all 0.3s cubic-bezier(.4,0,.2,1);
+            z-index: 1000; overflow: hidden;
+        }
+        .sidebar.collapsed { width: 70px; }
+
+        .sidebar-profile {
+            display: flex; align-items: center; gap: 13px;
+            padding: 18px 16px; background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            flex-shrink: 0; overflow: hidden; transition: padding 0.3s ease;
+        }
+        .sidebar.collapsed .sidebar-profile { padding: 14px 0; justify-content: center; }
+        .sidebar-avatar {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: #f5a623; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.88rem; font-weight: 800; flex-shrink: 0;
+            transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(245,166,35,0.4);
+        }
+        .sidebar.collapsed .sidebar-avatar { width: 38px; height: 38px; font-size: 0.82rem; }
+        .sidebar-user-info { overflow: hidden; min-width: 0; }
+        .sidebar-user-name { display: block; color: #fff; font-size: 0.92rem; font-weight: 700; white-space: nowrap; line-height: 1.3; }
+        .sidebar-user-sub { display: block; color: rgba(255,255,255,0.5); font-size: 0.73rem; white-space: nowrap; margin-top: 2px; }
+        .sidebar.collapsed .sidebar-user-info { opacity: 0; width: 0; pointer-events: none; overflow: hidden; }
+        .sidebar-toggle-wrap {
+            display: flex; justify-content: center; align-items: center;
+            padding: 8px 12px; flex-shrink: 0;
+            background: rgba(0,0,0,0.08);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar-toggle {
+            width: 30px; height: 30px;
+            background: rgba(255,255,255,0.15); color: #fff;
+            border: 1.5px solid rgba(255,255,255,0.3);
+            border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; transition: all 0.3s ease; flex-shrink: 0;
+        }
+        .sidebar-toggle:hover { background: #f5a623; border-color: #f5a623; transform: scale(1.1); }
+        .sidebar-toggle i { transition: transform 0.3s ease; }
+        .sidebar.collapsed .sidebar-toggle i { transform: rotate(180deg); }
+
+        .sidebar-menu { padding: 12px 0; flex: 1; overflow-y: auto; overflow-x: hidden; }
+        .sidebar-menu::-webkit-scrollbar { width: 4px; }
+        .sidebar-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+        .menu-label { padding: 12px 18px 4px; font-size: 0.62rem; font-weight: 700; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1.5px; white-space: nowrap; transition: opacity 0.2s; }
+        .sidebar.collapsed .menu-label { opacity: 0; }
+        .menu-item {
+            display: flex; align-items: center; gap: 13px;
+            padding: 11px 18px; color: rgba(255,255,255,0.55);
+            text-decoration: none; transition: all 0.2s ease;
+            font-size: 0.9rem; font-weight: 500; position: relative;
+            white-space: nowrap; overflow: hidden;
+        }
+        .menu-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: #f5a623; transform: scaleY(0); transition: transform 0.2s ease; border-radius: 0 2px 2px 0; }
+        .menu-item:hover { color: #fff; background: rgba(255,255,255,0.07); }
+        .menu-item:hover::before { transform: scaleY(0.6); }
+        .menu-item.active { color: #fff; font-weight: 700; background: rgba(255,255,255,0.08); }
+        .menu-item.active::before { transform: scaleY(1); }
+        .menu-item i { width: 20px; text-align: center; font-size: 1rem; flex-shrink: 0; color: rgba(255,255,255,0.45); transition: color 0.2s; }
+        .menu-item:hover i, .menu-item.active i { color: #fff; }
+        .menu-item span { transition: opacity 0.2s, width 0.3s; white-space: nowrap; }
+        .sidebar.collapsed .menu-item span { opacity: 0; width: 0; overflow: hidden; pointer-events: none; display: none; }
+        .sidebar.collapsed .menu-item { padding: 12px 0; justify-content: center; width: 70px; }
+        .sidebar.collapsed .menu-item:hover { background: rgba(255,255,255,0.07); }
+        .sidebar.collapsed .menu-item::before { top: 0; bottom: 0; transform: scaleY(0); }
+        .sidebar.collapsed .menu-item.active::before { transform: scaleY(1); }
+
+        .sidebar-footer { padding: 10px 14px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.15); flex-shrink: 0; }
+        .btn-logout { display: flex; align-items: center; gap: 12px; color: #f87171; text-decoration: none; font-size: 0.9rem; font-weight: 500; padding: 10px 4px; border-radius: 8px; transition: all 0.2s ease; white-space: nowrap; overflow: hidden; }
+        .btn-logout:hover { color: #ef4444; background: rgba(239,68,68,0.1); padding-left: 10px; }
+        .btn-logout i { flex-shrink: 0; min-width: 20px; text-align: center; font-size: 1rem; }
+        .btn-logout span { transition: opacity 0.2s, width 0.3s; white-space: nowrap; }
+        .sidebar.collapsed .btn-logout span { opacity: 0; width: 0; overflow: hidden; }
+        .sidebar.collapsed .btn-logout { justify-content: center; padding: 10px 0; width: 70px; }
+        .sidebar.collapsed .btn-logout:hover { padding-left: 0; background: rgba(239,68,68,0.1); }
+
+        /* ── MOBILE HEADER ── */
+        .mobile-header {
+            display: none;
+            background: #fff;
+            padding: 12px 20px;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .mobile-logo { display: flex; align-items: center; gap: 10px; }
+        .mobile-logo img { height: 32px; }
+        .mobile-logo span { font-weight: 700; color: #1f59d2; font-size: 1rem; }
+        .mobile-toggle-btn {
+            background: #f0f2f5; border: none; width: 38px; height: 38px;
+            border-radius: 10px; color: #1f59d2; font-size: 1.1rem; cursor: pointer;
+        }
+
+        /* ── MAIN ── */
+        .main { margin-left: 260px; padding: 30px; transition: all 0.3s cubic-bezier(.4,0,.2,1); }
+        .main.expanded { margin-left: 70px; }
+
+        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+        .topbar h1 { font-size: 1.5rem; color: #2c3e50; }
+        .topbar small { color: #666; font-size: 0.9rem; display: block; margin-top: 2px; }
+        .badge-relawan {
+            background: #1f59d2; color: #fff;
+            padding: 5px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;
+        }
+
+        /* STATS */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 28px; }
+        .stat-card {
+            background: #fff; border-radius: 14px; padding: 22px;
+            display: flex; align-items: center; gap: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+        .stat-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+        .stat-icon.blue   { background: #e3effd; color: #1f59d2; }
+        .stat-icon.orange { background: #fff3e0; color: #f5a623; }
+        .stat-icon.teal   { background: #e0f4f8; color: #0d7fa8; }
+        .stat-info h3 { font-size: 1.7rem; color: #2c3e50; font-weight: 700; }
+        .stat-info p { color: #888; font-size: 0.83rem; }
+
+        /* REALTIME BOX */
+        .realtime-box {
+            background: linear-gradient(135deg, #1f59d2, #2980d4);
+            border-radius: 14px; padding: 24px; color: #fff;
+            text-align: center; margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(31,89,210,0.3);
+        }
+        .realtime-box .jam { font-size: 3rem; font-weight: 700; letter-spacing: 4px; }
+        .realtime-box .tanggal { opacity: 0.85; margin-top: 6px; font-size: 0.95rem; }
+
+        /* CARD */
+        .card { background: #fff; border-radius: 14px; padding: 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 20px; }
+        .card h3 { font-size: 1rem; color: #2c3e50; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .card h3 i { color: #1f59d2; }
+
+        /* PRESENSI STATUS */
+        .status-hadir { background: #e3effd; color: #1f59d2; padding: 3px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; }
+        .status-belum { background: #fde8e8; color: #c0392b; padding: 3px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; }
+
+        /* SEARCH */
+        .search-bar {
+            display: flex; align-items: center; gap: 10px;
+            background: #f5f7fa; border: 1.5px solid #dde3ef;
+            border-radius: 10px; padding: 8px 14px; margin-bottom: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-bar:focus-within { border-color: #1f59d2; box-shadow: 0 0 0 3px rgba(31,89,210,0.1); background: #fff; }
+        .search-bar i { color: #aab; font-size: 0.88rem; }
+        .search-bar input { border: none; outline: none; font-size: 0.87rem; color: #444; background: transparent; width: 100%; }
+        .search-bar input::placeholder { color: #bbc; }
+
+        /* TABLE */
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f0f5fb; padding: 10px 14px; text-align: left; font-size: 0.82rem; color: #4a5568; font-weight: 600; border-bottom: 2px solid #dde3ef; }
+        td { padding: 10px 14px; border-bottom: 1px solid #f0f2f5; font-size: 0.87rem; color: #444; }
+        tbody tr { transition: background 0.15s; }
+        tbody tr:hover { background: #f5f8ff; }
+        tr:last-child td { border-bottom: none; }
+        .no-results { text-align: center; color: #aab; padding: 20px 0; font-size: 0.88rem; display: none; }
+
+        /* BTN */
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; border: none; font-weight: 500; text-decoration: none; transition: all 0.2s; }
+        .btn-primary { background: #1f59d2; color: #fff; }
+        .btn-primary:hover { background: #1646ad; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(31,89,210,0.3); }
+
+        /* ── RESPONSIVE MEDIA QUERIES ── */
+        @media (max-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .chart-grid-dual { grid-template-columns: 1fr !important; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { left: -260px; }
+            .sidebar.show { left: 0; }
+            .main { margin-left: 0 !important; padding: 20px 15px; }
+            .mobile-header { display: flex; }
+            
+            .stats-grid { grid-template-columns: 1fr; }
+            .realtime-box .jam { font-size: 2.2rem; }
+            .topbar { flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
+            .topbar h1 { font-size: 1.25rem; }
+            
+            .sidebar-toggle-wrap { display: none; } /* Hide internal toggle on mobile */
+            
+            /* Sidebar overlay when open */
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 950;
+                backdrop-filter: blur(2px);
+            }
+            .sidebar-overlay.show { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- MOBILE HEADER -->
+<header class="mobile-header">
+    <div class="mobile-logo">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" onerror="this.style.display='none'">
+        <span>Satu Amal</span>
+    </div>
+    <button class="mobile-toggle-btn" id="mobileToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+</header>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-profile">
+        {%- set nm = current_user.nama.split() -%}
+        <div class="sidebar-avatar">{{ nm[0][0]|upper }}{% if nm|length > 1 %}{{ nm[-1][0]|upper }}{% endif %}</div>
+        <div class="sidebar-user-info">
+            <span class="sidebar-user-name">{{ current_user.nama }}</span>
+            <span class="sidebar-user-sub">Relawan &middot; {{ current_user.kode_relawan }}</span>
+        </div>
+    </div>
+    <div class="sidebar-toggle-wrap">
+        <button class="sidebar-toggle" id="sidebarToggle" title="Tutup/Buka Menu">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+    </div>
+    <div class="sidebar-menu">
+        <div class="menu-label">Menu</div>
+        <a href="{{ url_for('relawan.index') }}" class="menu-item active" title="Dashboard">
+            <i class="fas fa-home"></i><span> Dashboard</span>
+        </a>
+        <div class="menu-label">Kegiatan</div>
+        <a href="{{ url_for('presensi.index') }}" class="menu-item" title="Presensi Wajah">
+            <i class="fas fa-camera"></i><span> Presensi Wajah</span>
+        </a>
+        <a href="{{ url_for('relawan.tugas_evaluasi') }}" class="menu-item" title="Tugas Evaluasi">
+            <i class="fas fa-clipboard-check"></i><span> Tugas Evaluasi</span>
+        </a>
+        <div class="menu-label">Akun</div>
+        <a href="{{ url_for('relawan.profil') }}" class="menu-item" title="Profil Saya">
+            <i class="fas fa-user-cog"></i><span> Profil Saya</span>
+        </a>
+    </div>
+    <div class="sidebar-footer">
+        <a href="{{ url_for('auth.logout') }}" class="btn-logout" title="Logout">
+            <i class="fas fa-sign-out-alt"></i><span> Logout</span>
+        </a>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="mainContent">
+    <div class="topbar">
+        <div>
+            <h1>Halo, {{ current_user.nama }}!</h1>
+            <small>{{ current_user.kode_relawan }}</small>
+        </div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <!-- Notifikasi -->
+            <style>
+            .notif-wrapper { position: relative; display: inline-block; }
+            .notif-btn { background: #fff; border: 1px solid #dde3ef; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #444; cursor: pointer; transition: 0.2s; position: relative; }
+            .notif-btn:hover { background: #f0f5fb; color: #1f59d2; }
+            .notif-badge { position: absolute; top: -5px; right: -5px; background: #e74c3c; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; border: 2px solid #fff; }
+            .notif-dropdown { display: none; position: absolute; right: 0; top: 48px; width: 320px; background: #fff; border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.15); z-index: 1000; overflow: hidden; border: 1px solid #eee; text-align: left; }
+            .notif-wrapper.open .notif-dropdown { display: block; }
+            .notif-header { padding: 12px 16px; background: #fafafa; border-bottom: 1px solid #eee; font-weight: 600; color: #333; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
+            .notif-body { max-height: 300px; overflow-y: auto; }
+            .notif-item { padding: 12px 16px; border-bottom: 1px solid #f5f5f5; display: flex; gap: 12px; align-items: flex-start; transition: 0.2s; color: #444; width: 100%; border:none; background:none; cursor:pointer; text-align:left; font-family: inherit; }
+            .notif-item:hover { background: #f9fbfd; }
+            .notif-item.unread { background: #f0f5fb; }
+            .notif-item i { color: #1f59d2; margin-top: 3px; font-size: 1.1rem; }
+            .notif-text { font-size: 0.85rem; line-height: 1.4; color: #333; }
+            .notif-time { font-size: 0.7rem; color: #999; margin-top: 4px; display: block; }
+            .notif-empty { padding: 20px; text-align: center; color: #888; font-size: 0.85rem; }
+            </style>
+            <div class="notif-wrapper" id="notifWrapper">
+                <button class="notif-btn" onclick="document.getElementById('notifWrapper').classList.toggle('open')">
+                    <i class="fas fa-bell"></i>
+                    {% if unread_notifications|length > 0 %}
+                    <span class="notif-badge">{{ unread_notifications|length }}</span>
+                    {% endif %}
+                </button>
+                <div class="notif-dropdown">
+                    <div class="notif-header">
+                        <span>Notifikasi Terbaru</span>
+                    </div>
+                    <div class="notif-body">
+                        {% if unread_notifications|length > 0 %}
+                            {% for notif in unread_notifications %}
+                            <form action="{{ url_for('auth.baca_notifikasi', notif_id=notif.id) }}" method="POST" style="margin:0;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="notif-item unread">
+                                    <i class="fas fa-info-circle"></i>
+                                    <div>
+                                        <div class="notif-text">{{ notif.pesan }}</div>
+                                        <span class="notif-time">{{ notif.created_at.strftime('%d %b %Y, %H:%M') }}</span>
+                                    </div>
+                                </button>
+                            </form>
+                            {% endfor %}
+                        {% else %}
+                            <div class="notif-empty">Belum ada notifikasi baru.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <!-- End Notifikasi -->
+            
+            <span class="badge-relawan"><i class="fas fa-user"></i> Relawan</span>
+        </div>
+    </div>
+
+    <!-- JAM REALTIME -->
+    <div class="realtime-box">
+        <div class="jam" id="jam">--:--:--</div>
+        <div class="tanggal" id="tanggal"></div>
+    </div>
+
+    <!-- STATISTIK DAMPAK (3 PILAR) -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="fas fa-hands-helping"></i></div>
+            <div class="stat-info">
+                <h3>{{ total_pm }} <small style="font-size:1rem;font-weight:400">jiwa</small></h3>
+                <p>Total Penerima Manfaat</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange"><i class="fas fa-map-marker-alt"></i></div>
+            <div class="stat-info">
+                <h3>{{ total_lokasi }} <small style="font-size:1rem;font-weight:400">titik</small></h3>
+                <p>Jangkauan Lokasi</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon teal"><i class="fas fa-calendar-check"></i></div>
+            <div class="stat-info">
+                <h3>{{ total_kehadiran }}x</h3>
+                <p>Total Partisipasi Program</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRAFIK 3-in-1 -->
+    <div style="display:grid; grid-template-columns:1fr; gap:20px; margin-bottom:24px;">
+
+        <!-- Chart 1: Jam per Bulan -->
+        <div class="card" style="margin-bottom:0;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; flex-wrap:wrap; gap:10px;">
+                <div>
+                    <h3 style="margin-bottom:2px;"><i class="fas fa-chart-bar"></i> Kontribusi Jam per Bulan</h3>
+                    <p style="font-size:0.78rem;color:#aaa;margin-bottom:12px;">5 bulan terakhir</p>
+                </div>
+            </div>
+            <div style="position:relative;height:220px;">
+                <canvas id="chartMonthly"></canvas>
+            </div>
+        </div>
+
+        <!-- Chart 2 & 3: doughnut -->
+        <div class="chart-grid-dual" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div class="card" style="margin-bottom:0;">
+                <h3 style="margin-bottom:2px;"><i class="fas fa-chart-pie"></i> Distribusi Program</h3>
+                <p style="font-size:0.78rem;color:#aaa;margin-bottom:12px;">Berdasarkan frekuensi kehadiran</p>
+                <div style="position:relative;height:220px;">
+                    <canvas id="chartKategori"></canvas>
+                </div>
+            </div>
+            <div class="card" style="margin-bottom:0;">
+                <h3 style="margin-bottom:2px;"><i class="fas fa-map"></i> Sebaran Lokasi</h3>
+                <p style="font-size:0.78rem;color:#aaa;margin-bottom:12px;">Area kegiatan yang pernah diikuti</p>
+                <div style="position:relative;height:220px;">
+                    <canvas id="chartLocation"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIWAYAT dengan Pagination -->
+    <div class="card">
+        <h3><i class="fas fa-history"></i> Riwayat Presensi</h3>
+        <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchRiwayat" placeholder="Cari tanggal, status, atau nama program..." oninput="renderRiwayat(1)">
+        </div>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Tanggal</th>
+                        <th>Jam Masuk</th>
+                        <th>Jam Keluar</th>
+                        <th>Total Jam</th>
+                        <th>Nama Program</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="riwayatBody"></tbody>
+            </table>
+        </div>
+        <div class="no-results" id="noRiwayat">Tidak ada hasil yang cocok</div>
+        <div id="riwayatPagination" style="display:flex;justify-content:flex-end;gap:6px;margin-top:14px;flex-wrap:wrap;"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    /* ── Sidebar Logic ── */
+    const sidebar = document.getElementById('sidebar');
+    const main    = document.getElementById('mainContent');
+    const overlay = document.getElementById('sidebarOverlay');
+    const mobileBtn = document.getElementById('mobileToggle');
+
+    // Desktop Toggle
+    if (localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth > 768) {
+        sidebar.classList.add('collapsed'); main.classList.add('expanded');
+    }
+    
+    document.getElementById('sidebarToggle').addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed'); main.classList.toggle('expanded');
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+    });
+
+    // Mobile Toggle
+    if (mobileBtn) {
+        mobileBtn.addEventListener('click', () => {
+            sidebar.classList.add('show');
+            overlay.classList.add('show');
+        });
+    }
+
+    if (overlay) {
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+        });
+    }
+
+    /* ── Clock ── */
+    function updateJam() {
+        const now = new Date();
+        const jamEl = document.getElementById('jam');
+        const tglEl = document.getElementById('tanggal');
+        const h = String(now.getHours()).padStart(2,'0');
+        const m = String(now.getMinutes()).padStart(2,'0');
+        const s = String(now.getSeconds()).padStart(2,'0');
+        if (jamEl) jamEl.textContent = h + ':' + m + ':' + s;
+        if (tglEl) tglEl.textContent = now.toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    }
+    updateJam(); setInterval(updateJam, 1000);
+
+    /* ── Chart 1: Monthly Bar ── */
+    const canvasMonthly = document.getElementById('chartMonthly');
+    if (canvasMonthly) {
+        new Chart(canvasMonthly, {
+            type: 'bar',
+            data: {
+                labels: {{ bulan_labels|safe }},
+                datasets: [
+                    {
+                        label: 'Total Jam',
+                        data: {{ jam_per_bulan|safe }},
+                        backgroundColor: '#1f59d2',
+                        borderRadius: 6,
+                        barThickness: window.innerWidth < 768 ? 20 : 40
+                    }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f0f2f5' }, ticks: { callback: v => v + ' jam' } },
+                    x: { grid: { display: false } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    /* ── Chart 2: Doughnut Kategori ── */
+    const canvasCat = document.getElementById('chartKategori');
+    const catLabels = {{ cat_labels|safe }};
+    const catData   = {{ cat_data|safe }};
+    if (canvasCat) {
+        if (catData.length > 0) {
+            new Chart(canvasCat, {
+                type: 'doughnut',
+                data: {
+                    labels: catLabels,
+                    datasets: [{ data: catData, backgroundColor: ['#1f59d2','#2ecc71','#f5a623','#e74c3c','#0d7fa8','#9b59b6'], borderWidth: 0, hoverOffset: 6 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    cutout: '62%',
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 11, font: { size: 10 } } } }
+                }
+            });
+        } else {
+            canvasCat.parentElement.innerHTML = '<p style="text-align:center;color:#aaa;padding:60px 0;font-size:0.85rem;"><i class="fas fa-chart-pie" style="font-size:2rem;display:block;margin-bottom:8px;"></i>Belum ada data</p>';
+        }
+    }
+
+    /* ── Chart 3: Lokasi Doughnut ── */
+    const canvasLoc = document.getElementById('chartLocation');
+    const locLabels = {{ loc_labels|safe }};
+    const locData   = {{ loc_data|safe }};
+    if (canvasLoc) {
+        if (locData.length > 0) {
+            new Chart(canvasLoc, {
+                type: 'doughnut',
+                data: {
+                    labels: locLabels,
+                    datasets: [{ data: locData, backgroundColor: ['#9b59b6','#0d7fa8','#e74c3c','#f5a623','#2ecc71','#1f59d2'], borderWidth: 0, hoverOffset: 6 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    cutout: '62%',
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 11, font: { size: 10 } } } }
+                }
+            });
+        } else {
+            canvasLoc.parentElement.innerHTML = '<p style="text-align:center;color:#aaa;padding:60px 0;font-size:0.85rem;"><i class="fas fa-map" style="font-size:2rem;display:block;margin-bottom:8px;"></i>Belum ada data</p>';
+        }
+    }
+
+    /* ── Riwayat Table ── */
+    const allRiwayat = [
+        {% for p in riwayat %}
+        {
+            no: {{ loop.index }},
+            tanggal: '{{ p.tanggal.strftime("%d %b %Y") }}',
+            masuk:   '{{ p.jam_masuk.strftime("%H:%M") if p.jam_masuk else "-" }}',
+            keluar:  '{{ p.jam_keluar.strftime("%H:%M") if p.jam_keluar else "-" }}',
+            jam:     '{{ p.total_jam if p.total_jam else "0" }} jam',
+            program: '{{ (p.nama_program or "-")|replace("'", "\\'") }}',
+            status:  '{{ p.status or "hadir" }}'
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    const PAGE_SIZE = 5;
+    let currentPage = 1;
+
+    function renderRiwayat(page = 1) {
+        currentPage = page;
+        const searchInput = document.getElementById('searchRiwayat');
+        if (!searchInput) return;
+        const q = searchInput.value.toLowerCase();
+        const filtered = allRiwayat.filter(r =>
+            r.tanggal.toLowerCase().includes(q) ||
+            r.program.toLowerCase().includes(q) ||
+            r.status.toLowerCase().includes(q)
+        );
+
+        const tbody   = document.getElementById('riwayatBody');
+        const noRes   = document.getElementById('noRiwayat');
+        const pagDiv  = document.getElementById('riwayatPagination');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (filtered.length === 0) {
+            if (noRes) noRes.style.display = 'block';
+            if (pagDiv) pagDiv.innerHTML = '';
+            return;
+        }
+        if (noRes) noRes.style.display = 'none';
+
+        const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * PAGE_SIZE;
+        const paged = filtered.slice(start, start + PAGE_SIZE);
+
+        paged.forEach((r, i) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${start + i + 1}</td>
+                <td>${r.tanggal}</td>
+                <td>${r.masuk}</td>
+                <td style="color:${r.keluar !== '-' ? '#2ecc71' : '#f5a623'}">${r.keluar}</td>
+                <td>${r.jam}</td>
+                <td>${r.program}</td>
+                <td><span class="status-hadir">${r.status}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        if (pagDiv) {
+            pagDiv.innerHTML = '';
+            if (totalPages <= 1) return;
+            const baseStyle = 'padding:4px 11px;border-radius:6px;border:1px solid #dde3ef;cursor:pointer;font-size:0.83rem;font-weight:600;transition:all 0.2s;display:flex;align-items:center;justify-content:center;min-width:28px;height:28px;';
+
+            const prev = document.createElement('button');
+            prev.innerHTML = '<i class="fas fa-chevron-left" style="font-size: 0.7rem;"></i>';
+            prev.style.cssText = baseStyle; prev.style.background = '#fff'; prev.style.color = '#555';
+            if (currentPage === 1) { prev.style.opacity = '0.4'; prev.disabled = true; }
+            prev.onclick = () => renderRiwayat(currentPage - 1);
+            pagDiv.appendChild(prev);
+
+            const next = document.createElement('button');
+            next.innerHTML = '<i class="fas fa-chevron-right" style="font-size: 0.7rem;"></i>';
+            next.style.cssText = baseStyle; next.style.background = '#fff'; next.style.color = '#555';
+            if (currentPage === totalPages) { next.style.opacity = '0.4'; next.disabled = true; }
+            next.onclick = () => renderRiwayat(currentPage + 1);
+            pagDiv.appendChild(next);
+        }
+    }
+    renderRiwayat(1);
+</script>
+</body>
+</html>

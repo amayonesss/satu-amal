@@ -1,0 +1,14 @@
+flask
+flask-login
+flask-sqlalchemy
+flask-migrate
+flask-wtf
+python-dotenv
+pandas
+openpyxl
+opencv-python
+face-recognition
+numpy
+Pillow
+werkzeug
+pymysql

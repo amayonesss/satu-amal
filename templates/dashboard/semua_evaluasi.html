@@ -1,0 +1,248 @@
+{% extends 'base_admin.html' %} {% block title %}Semua Evaluasi Program - Satu
+Amal{% endblock %} {% block extra_style %} .topbar { display: flex;
+justify-content: space-between; align-items: center; margin-bottom: 28px;
+flex-wrap: wrap; gap: 12px; } .topbar h1 { font-size: 1.4rem; color: #1a2d4f;
+font-weight: 700; } /* Stat cards */ .stat-grid { display: grid;
+grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px;
+margin-bottom: 28px; } .stat-card { background: #fff; border-radius: 14px;
+padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); text-align: center;
+border-top: 3px solid #1f59d2; } .stat-card.green { border-top-color: #107c41; }
+.stat-card.orange { border-top-color: #f59e0b; } .stat-card.purple {
+border-top-color: #6366f1; } .stat-card .val { font-size: 2rem; font-weight:
+800; color: #1f59d2; line-height: 1.1; } .stat-card.green .val { color: #107c41;
+} .stat-card.orange .val { color: #f59e0b; } .stat-card.purple .val { color:
+#6366f1; } .stat-card .lbl { font-size: 0.78rem; color: #888; margin-top: 5px;
+font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; } .card {
+background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 2px 16px
+rgba(0,0,0,0.07); margin-bottom: 24px; } .card-header { display: flex;
+justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.card-header h3 { font-size: 1.05rem; color: #1a2d4f; display: flex;
+align-items: center; gap: 8px; font-weight: 700; } .card-header h3 i { color:
+#1f59d2; } /* Filter bar */ .filter-bar { display: flex; gap: 10px;
+margin-bottom: 20px; flex-wrap: wrap; align-items: center; } .filter-bar input,
+.filter-bar select { padding: 9px 14px; border: 1.5px solid #dde3ef;
+border-radius: 8px; font-size: 0.88rem; outline: none; background: #fff;
+transition: border-color 0.2s; } .filter-bar input:focus, .filter-bar
+select:focus { border-color: #1f59d2; } .filter-bar input { min-width: 220px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px;
+border-radius: 8px; font-size: 0.88rem; cursor: pointer; border: none;
+font-weight: 600; text-decoration: none; transition: all 0.2s; } .btn-secondary
+{ background: #f0f2f5; color: #555; } .btn-secondary:hover { background:
+#e4e6e9; } .btn-primary { background: #1f59d2; color: #fff; } .btn-primary:hover
+{ background: #1643a3; } /* Evaluasi rows */ .eval-row { border: 1px solid
+#eef1f8; border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; cursor:
+pointer; transition: all 0.2s; } .eval-row:hover { border-color: #1f59d2;
+box-shadow: 0 4px 16px rgba(31,89,210,0.09); } .eval-row-top { display: flex;
+justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap:
+10px; } .eval-program-name { font-weight: 700; color: #1a2d4f; font-size:
+0.97rem; } .eval-program-meta { font-size: 0.78rem; color: #888; margin-top:
+3px; } .eval-badges { display: flex; gap: 8px; flex-wrap: wrap; align-items:
+center; } .badge { display: inline-block; padding: 3px 11px; border-radius:
+20px; font-size: 0.77rem; font-weight: 700; } .badge-blue { background: #e3effd;
+color: #1f59d2; } .badge-green { background: #e3f5e9; color: #107c41; }
+.badge-orange { background: #fef3c7; color: #b45309; } .eval-row-body {
+margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media(max-width: 600px) { .eval-row-body { grid-template-columns: 1fr; } }
+.eval-text-block { background: #f8faff; border-left: 3px solid #1f59d2;
+border-radius: 0 8px 8px 0; padding: 10px 14px; font-size: 0.84rem; color: #444;
+line-height: 1.6; } .eval-text-block.kendala { border-left-color: #f59e0b;
+background: #fffbf0; } .eval-text-block.empty { color: #bbb; font-style: italic;
+} .eval-text-lbl { font-size: 0.72rem; font-weight: 700; color: #888;
+text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.pic-chip { display: inline-flex; align-items: center; gap: 6px; background:
+#f0f4ff; border-radius: 20px; padding: 4px 10px; font-size: 0.8rem; color:
+#1f59d2; font-weight: 600; } .pic-chip i { font-size: 0.72rem; } .eval-link {
+font-size: 0.8rem; color: #1f59d2; font-weight: 600; text-decoration: none; }
+.eval-link:hover { text-decoration: underline; } .eval-time { font-size:
+0.75rem; color: #aab; } .empty-state { text-align: center; padding: 60px 20px;
+color: #aab; } .empty-state i { font-size: 3rem; margin-bottom: 12px; display:
+block; } {% endblock %} {% block content %}
+<div class="topbar">
+  <h1>
+    <i
+      class="fas fa-clipboard-list"
+      style="color: #1f59d2; margin-right: 10px"
+    ></i
+    >Semua Evaluasi Program
+  </h1>
+  <a href="{{ url_for('master.master_program') }}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left"></i> Kembali ke Program
+  </a>
+</div>
+
+{# Statistik ringkas #}
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="val">{{ total_eval }}</div>
+    <div class="lbl">Total Evaluasi</div>
+  </div>
+  <div class="stat-card green">
+    <div class="val">{{ total_pm_aktual }}</div>
+    <div class="lbl">Total PM Aktual</div>
+  </div>
+  <div class="stat-card orange">
+    <div class="val">{{ program_sudah_eval }} / {{ total_program }}</div>
+    <div class="lbl">Program Dievaluasi</div>
+  </div>
+  <div class="stat-card purple">
+    <div class="val">
+      {{ ((program_sudah_eval / total_program * 100) | int) if total_program > 0
+      else 0 }}%
+    </div>
+    <div class="lbl">Coverage Evaluasi</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-comments"></i> Daftar Feedback Evaluasi</h3>
+  </div>
+
+  <div class="filter-bar">
+    <div
+      style="
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #f5f7fa;
+        border: 1.5px solid #dde3ef;
+        border-radius: 10px;
+        padding: 9px 14px;
+        width: 100%;
+      "
+    >
+      <i class="fas fa-search" style="color: #aab"></i>
+      <input
+        type="text"
+        id="evalSearch"
+        placeholder="Cari program berdasarkan nama, kategori, atau lokasi..."
+        oninput="filterEval()"
+        style="
+          border: none;
+          outline: none;
+          font-size: 0.88rem;
+          background: transparent;
+          width: 100%;
+        "
+      />
+    </div>
+  </div>
+
+  {% if evaluasi_list %}
+  <div id="evalList">
+    {% for e in evaluasi_list %}
+    <div
+      class="eval-row"
+      data-search="{{ (e.program.nama_program + ' ' + e.admin.nama) | lower }}"
+      onclick="window.location='{{ url_for('dashboard.view_evaluasi_program', program_id=e.program_id) }}'"
+    >
+      <div class="eval-row-top">
+        <div>
+          <div class="eval-program-name">
+            <i
+              class="fas fa-project-diagram"
+              style="color: #1f59d2; margin-right: 5px"
+            ></i>
+            {{ e.program.nama_program }}
+          </div>
+          <div class="eval-program-meta">
+            {{ e.program.kota or '-' }} &middot; {{ e.program.bulan or '' }}
+            {{ e.program.tahun or '' }}
+          </div>
+        </div>
+        <div class="eval-badges">
+          <span class="badge badge-blue"
+            ><i class="fas fa-tag"></i> {{ e.program.kategori or '-' }}</span
+          >
+          <span class="badge badge-green"
+            ><i class="fas fa-users"></i> {{ e.jumlah_pm_aktual }} PM
+            Aktual</span
+          >
+          <span class="eval-time"
+            ><i class="fas fa-clock"></i> {{ e.created_at.strftime('%d %b %Y')
+            }}</span
+          >
+        </div>
+      </div>
+
+      <div
+        style="
+          margin-top: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 8px;
+        "
+      >
+        <span class="pic-chip">
+          <i class="fas fa-user-tie"></i> {{ e.admin.nama }} ({{
+          e.admin.kode_relawan }})
+        </span>
+        <a
+          href="{{ url_for('dashboard.view_evaluasi_program', program_id=e.program_id) }}"
+          class="eval-link"
+          onclick="event.stopPropagation()"
+        >
+          Lihat Detail <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+
+      <div class="eval-row-body">
+        <div>
+          <div class="eval-text-lbl">
+            <i class="fas fa-check-circle" style="color: #107c41"></i> Catatan
+            Keberhasilan
+          </div>
+          <div
+            class="eval-text-block {% if not e.catatan_keberhasilan %}empty{% endif %}"
+          >
+            {{ (e.catatan_keberhasilan[:150] + '…') if e.catatan_keberhasilan
+            and e.catatan_keberhasilan|length > 150 else (e.catatan_keberhasilan
+            or 'Tidak ada catatan.') }}
+          </div>
+        </div>
+        <div>
+          <div class="eval-text-lbl">
+            <i class="fas fa-exclamation-triangle" style="color: #f59e0b"></i>
+            Kendala & Rekomendasi
+          </div>
+          <div
+            class="eval-text-block kendala {% if not e.kendala_lapangan %}empty{% endif %}"
+          >
+            {{ (e.kendala_lapangan[:150] + '…') if e.kendala_lapangan and
+            e.kendala_lapangan|length > 150 else (e.kendala_lapangan or 'Tidak
+            ada catatan.') }}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div id="evalEmpty" style="display: none" class="empty-state">
+    <i class="fas fa-search" style="color: #dde3ef"></i>
+    <p>Tidak ada evaluasi yang cocok dengan pencarian.</p>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-clipboard" style="color: #dde3ef"></i>
+    <p>Belum ada evaluasi yang disubmit oleh PIC manapun.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %} {% block extra_script %}
+<script>
+  function filterEval() {
+    const q = document.getElementById("evalSearch").value.toLowerCase();
+    const rows = document.querySelectorAll("#evalList .eval-row");
+    let visible = 0;
+    rows.forEach((row) => {
+      const match = row.dataset.search.includes(q);
+      row.style.display = match ? "" : "none";
+      if (match) visible++;
+    });
+    document.getElementById("evalEmpty").style.display =
+      visible === 0 ? "" : "none";
+  }
+</script>
+{% endblock %}

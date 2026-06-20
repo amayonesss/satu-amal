@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masuk</title>
+    <meta name="description" content="Login ke Sistem Digitalisasi Daily Activities Report Yayasan Satu Amal Indonesia">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary:       #1a4fba;
+            --primary-dark:  #0e3490;
+            --primary-light: #3d72e8;
+            --accent:        #f59e0b;
+            --surface:       #ffffff;
+            --bg:            #f0f4fc;
+            --text-main:     #0f172a;
+            --text-muted:    #64748b;
+            --border:        #e2e8f0;
+            --error-bg:      #fff1f2;
+            --error-text:    #be123c;
+            --error-border:  #fecdd3;
+            --success-bg:    #f0fdf4;
+            --success-text:  #15803d;
+            --success-border:#bbf7d0;
+            --radius-sm:     6px;
+            --radius-md:     12px;
+            --radius-lg:     20px;
+            --shadow-card:   0 20px 60px rgba(15, 30, 80, 0.15);
+            --transition:    0.25s ease;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: var(--bg);
+            display: flex;
+            align-items: stretch;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ─── LEFT PANEL ─────────────────────────────────────────── */
+        .panel-left {
+            display: none;
+            flex: 1;
+            background: linear-gradient(145deg, #0e3490 0%, #1a4fba 40%, #2563eb 75%, #3d72e8 100%);
+            position: relative;
+            overflow: hidden;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            padding: 60px 56px;
+        }
+
+        @media (min-width: 960px) {
+            .panel-left { display: flex; }
+        }
+
+        /* animated blob shapes */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+            animation: float 8s ease-in-out infinite;
+        }
+        .blob-1 { width: 340px; height: 340px; top: -80px;  left: -80px;  animation-delay: 0s;   }
+        .blob-2 { width: 220px; height: 220px; bottom: -60px; right: -60px; animation-delay: 2.5s; }
+        .blob-3 { width: 160px; height: 160px; bottom: 30%; left: 10%;    animation-delay: 1.2s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50%       { transform: translateY(-20px) scale(1.04); }
+        }
+
+        /* grid dots overlay */
+        .panel-left::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(255,255,255,0.12) 1px, transparent 1px);
+            background-size: 28px 28px;
+        }
+
+        .panel-left-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-logo-left {
+            width: 260px;
+            height: 260px;
+            object-fit: contain;
+            filter: drop-shadow(0 16px 40px rgba(0,0,0,0.25));
+        }
+
+        /* ─── RIGHT PANEL ─────────────────────────────────────────── */
+        .panel-right {
+            flex: 0 0 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 24px;
+            overflow-y: auto;
+        }
+
+        @media (min-width: 960px) {
+            .panel-right { flex: 0 0 480px; }
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* Mobile logo (shown only on small screens) */
+        .mobile-brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 36px;
+        }
+
+        @media (min-width: 960px) {
+            .mobile-brand { display: none; }
+        }
+
+        .mobile-brand img {
+            height: 72px;
+            object-fit: contain;
+            margin-bottom: 12px;
+        }
+
+        .mobile-brand span {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* heading */
+        .login-heading {
+            margin-bottom: 8px;
+        }
+
+        .login-heading h2 {
+            font-size: 1.65rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.4px;
+        }
+
+        .login-heading p {
+            margin-top: 6px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .divider {
+            width: 40px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            border-radius: 99px;
+            margin: 16px 0 28px;
+        }
+
+        /* alerts */
+        .alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            border: 1px solid;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .alert-danger  { background: var(--error-bg);   color: var(--error-text);   border-color: var(--error-border);   }
+        .alert-success { background: var(--success-bg); color: var(--success-text); border-color: var(--success-border); }
+
+        .alert i { margin-top: 1px; flex-shrink: 0; }
+
+        /* form */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 7px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-wrap i.field-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 0.85rem;
+            pointer-events: none;
+            transition: color var(--transition);
+        }
+
+        .input-wrap input {
+            width: 100%;
+            padding: 12px 44px 12px 40px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: 0.92rem;
+            font-family: inherit;
+            color: var(--text-main);
+            background: #fafbff;
+            outline: none;
+            transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+        }
+
+        .input-wrap input::placeholder { color: #b0bdd0; }
+
+        .input-wrap input:focus {
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(26, 79, 186, 0.12);
+        }
+
+        .input-wrap input:focus ~ i.field-icon,
+        .input-wrap:focus-within i.field-icon {
+            color: var(--primary);
+        }
+
+        /* toggle password button */
+        .btn-toggle-pw {
+            position: absolute;
+            right: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            padding: 4px;
+            border-radius: 4px;
+            transition: color var(--transition);
+        }
+        .btn-toggle-pw:hover { color: var(--primary); }
+
+        /* remember */
+        .row-remember {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 26px;
+        }
+        
+
+        .custom-check {
+            width: 17px;
+            height: 17px;
+            accent-color: var(--primary);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .row-remember label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* submit button */
+        .btn-submit {
+            width: 100%;
+            padding: 13.5px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.96rem;
+            font-weight: 700;
+            font-family: inherit;
+            letter-spacing: 0.3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            transition: transform var(--transition), box-shadow var(--transition), opacity var(--transition);
+            box-shadow: 0 6px 22px rgba(26, 79, 186, 0.35);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-submit::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+            opacity: 0;
+            transition: opacity var(--transition);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 28px rgba(26, 79, 186, 0.42);
+        }
+
+        .btn-submit:hover::before { opacity: 1; }
+        .btn-submit:active { transform: translateY(0); }
+
+        /* ripple */
+        .btn-submit .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            background: rgba(255,255,255,0.3);
+        }
+
+        @keyframes ripple {
+            to { transform: scale(4); opacity: 0; }
+        }
+
+        /* footer */
+        .login-footer {
+            margin-top: 36px;
+            text-align: center;
+        }
+
+        .login-footer p {
+            font-size: 0.8rem;
+            color: #b0bdd0;
+        }
+
+        .login-footer strong {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .badge-year {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 0.72rem;
+            color: #c8d3e6;
+            letter-spacing: 0.3px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ── LEFT PANEL ─────────────────────────────────────── -->
+    <aside class="panel-left" aria-hidden="true">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+
+        <div class="panel-left-content">
+            <img class="brand-logo-left"
+                 src="{{ url_for('static', filename='img/logo.png') }}"
+                 alt="Logo Satu Amal Indonesia">
+        </div>
+    </aside>
+
+    <!-- ── RIGHT PANEL ────────────────────────────────────── -->
+    <main class="panel-right">
+        <div class="login-box">
+
+            <!-- Mobile brand -->
+            <div class="mobile-brand">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Satu Amal Indonesia">
+            </div>
+
+            <div class="login-heading">
+                <h2>Selamat Datang,</h2>
+                <p>Masuk ke akun Anda</p>
+            </div>
+            <div class="divider"></div>
+
+            <!-- Flash messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}" role="alert">
+                        <i class="fas fa-{% if category == 'danger' %}exclamation-circle{% else %}check-circle{% endif %}"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endwith %}
+
+            <!-- Login form -->
+            <form method="POST" action="{{ url_for('auth.login') }}" id="loginForm" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                <div class="form-group">
+                    <label class="form-label" for="kode_relawan">Kode Relawan / Email</label>
+                    <div class="input-wrap">
+                        <input
+                            type="text"
+                            id="kode_relawan"
+                            name="kode_relawan"
+                            placeholder="Masukkan kode atau email Anda"
+                            autocomplete="username"
+                            required>
+                        <i class="fas fa-user field-icon"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <div class="input-wrap">
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="Masukkan password Anda"
+                            autocomplete="current-password"
+                            required>
+                        <i class="fas fa-lock field-icon"></i>
+                        <button type="button" class="btn-toggle-pw" id="togglePw" aria-label="Tampilkan/sembunyikan password">
+                            <i class="fas fa-eye" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row-remember">
+                    <input type="checkbox" class="custom-check" id="ingat_saya" name="ingat_saya">
+                    <label for="ingat_saya">Ingat saya di perangkat ini</label>
+                </div>
+
+                <button type="submit" class="btn-submit" id="btnLogin">
+                    <i class="fas fa-arrow-right-to-bracket"></i>
+                    Masuk ke Sistem
+                </button>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; font-size:0.85rem;">
+                    <a href="{{ url_for('auth.forgot_password') }}"
+                       style="color:#1a4fba; text-decoration:none; font-weight:500;">
+                        <i class="fas fa-key"></i> Lupa Password?
+                    </a>
+                </div>
+            </form>
+
+            
+            <footer class="login-footer">
+    
+                <p>Sistem Digitalisasi <strong>Daily Activities Report</strong></p>
+                <span class="badge-year">© 2026 Yayasan Satu Amal Indonesia. All rights reserved.</span>
+            </footer>
+
+        </div>
+    </main>
+
+    <script>
+        // Toggle password visibility
+        const togglePw  = document.getElementById('togglePw');
+        const pwInput   = document.getElementById('password');
+        const eyeIcon   = document.getElementById('eyeIcon');
+
+        togglePw.addEventListener('click', () => {
+            const isHidden = pwInput.type === 'password';
+            pwInput.type   = isHidden ? 'text' : 'password';
+            eyeIcon.className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
+        });
+
+        // Ripple effect on submit button
+        const btn = document.getElementById('btnLogin');
+        btn.addEventListener('click', function (e) {
+            const circle = document.createElement('span');
+            const diameter = Math.max(btn.clientWidth, btn.clientHeight);
+            const radius   = diameter / 2;
+            const rect     = btn.getBoundingClientRect();
+
+            circle.style.cssText = `
+                width: ${diameter}px; height: ${diameter}px;
+                left: ${e.clientX - rect.left - radius}px;
+                top:  ${e.clientY - rect.top  - radius}px;
+            `;
+            circle.classList.add('ripple');
+
+            const existing = btn.querySelector('.ripple');
+            if (existing) existing.remove();
+            btn.appendChild(circle);
+        });
+
+        // Auto-dismiss alerts after 5 s
+        document.querySelectorAll('.alert').forEach(el => {
+            setTimeout(() => {
+                el.style.transition = 'opacity 0.4s ease, margin 0.4s ease, padding 0.4s ease';
+                el.style.opacity = '0';
+                el.style.marginBottom = '0';
+                el.style.padding = '0';
+                setTimeout(() => el.remove(), 450);
+            }, 5000);
+        });
+    </script>
+
+</body>
+</html>

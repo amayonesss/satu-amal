@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>{% block title %}Satu Amal{% endblock %}</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; }
+
+      /* ── SIDEBAR ── */
+      .sidebar {
+          width: 260px; height: 100vh;
+          background: linear-gradient(180deg, #0f3d99 0%, #1f59d2 60%, #2e73f2 100%);
+          position: fixed; top: 0; left: 0;
+          display: flex; flex-direction: column;
+          box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+          transition: all 0.3s cubic-bezier(.4,0,.2,1);
+          z-index: 1000; overflow: hidden;
+      }
+      .sidebar.collapsed { width: 70px; }
+      .sidebar-logo {
+          padding: 14px 18px;
+          display: flex; align-items: center; gap: 10px;
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+          flex-shrink: 0;
+      }
+      .sidebar-logo span {
+          font-size: 1.1rem; font-weight: 800; color: #fff;
+          letter-spacing: 0.5px; white-space: nowrap;
+      }
+      .sidebar-logo i { color: #f5a623; font-size: 1.3rem; }
+      .sidebar.collapsed .sidebar-logo span { opacity: 0; width: 0; overflow: hidden; display: none; }
+
+      .sidebar-profile {
+          display: flex; align-items: center; gap: 13px;
+          padding: 18px 16px; background: rgba(0,0,0,0.2);
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+          flex-shrink: 0; overflow: hidden; transition: padding 0.3s ease;
+      }
+      .sidebar.collapsed .sidebar-profile { padding: 14px 0; justify-content: center; }
+      .sidebar-avatar {
+          width: 44px; height: 44px; border-radius: 50%;
+          background: #f5a623; color: #fff;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 0.88rem; font-weight: 800; flex-shrink: 0;
+          transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(245,166,35,0.4);
+      }
+      .sidebar.collapsed .sidebar-avatar { width: 38px; height: 38px; font-size: 0.82rem; }
+      .sidebar-user-info { overflow: hidden; min-width: 0; }
+      .sidebar-user-name { display: block; color: #fff; font-size: 0.92rem; font-weight: 700; white-space: nowrap; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; }
+      .sidebar-user-sub { display: block; color: rgba(255,255,255,0.5); font-size: 0.73rem; white-space: nowrap; margin-top: 2px; }
+      .sidebar.collapsed .sidebar-user-info { opacity: 0; width: 0; pointer-events: none; overflow: hidden; }
+
+      .sidebar-toggle-wrap {
+          display: flex; justify-content: center; align-items: center;
+          padding: 8px 12px; flex-shrink: 0;
+          background: rgba(0,0,0,0.08); border-bottom: 1px solid rgba(255,255,255,0.1);
+      }
+      .sidebar-toggle {
+          width: 30px; height: 30px; background: rgba(255,255,255,0.15); color: #fff;
+          border: 1.5px solid rgba(255,255,255,0.3); border-radius: 50%; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 0.75rem; transition: all 0.3s ease; flex-shrink: 0;
+      }
+      .sidebar-toggle:hover { background: #f5a623; border-color: #f5a623; transform: scale(1.1); }
+      .sidebar-toggle i { transition: transform 0.3s ease; }
+      .sidebar.collapsed .sidebar-toggle i { transform: rotate(180deg); }
+
+      .sidebar-menu { padding: 12px 0; flex: 1; overflow-y: auto; overflow-x: hidden; }
+      .sidebar-menu::-webkit-scrollbar { width: 4px; }
+      .sidebar-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+      .menu-label { padding: 12px 18px 4px; font-size: 0.62rem; font-weight: 700; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1.5px; white-space: nowrap; transition: opacity 0.2s; }
+      .sidebar.collapsed .menu-label { opacity: 0; }
+
+      .menu-item {
+          display: flex; align-items: center; gap: 13px;
+          padding: 11px 18px; color: rgba(255,255,255,0.55);
+          text-decoration: none; transition: all 0.2s ease;
+          font-size: 0.9rem; font-weight: 500; position: relative;
+          white-space: nowrap; overflow: hidden;
+      }
+      .menu-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: #f5a623; transform: scaleY(0); transition: transform 0.2s ease; border-radius: 0 2px 2px 0; }
+      .menu-item:hover { color: #fff; background: rgba(255,255,255,0.07); }
+      .menu-item:hover::before { transform: scaleY(0.6); }
+      .menu-item.active { color: #fff; font-weight: 700; background: rgba(255,255,255,0.08); }
+      .menu-item.active::before { transform: scaleY(1); }
+      .menu-item i { width: 20px; text-align: center; font-size: 1rem; flex-shrink: 0; color: rgba(255,255,255,0.45); transition: color 0.2s; }
+      .menu-item:hover i, .menu-item.active i { color: #fff; }
+      .menu-item span { transition: opacity 0.2s, width 0.3s; white-space: nowrap; }
+      .sidebar.collapsed .menu-item span { opacity: 0; width: 0; overflow: hidden; pointer-events: none; display: none; }
+      .sidebar.collapsed .menu-item { padding: 13px 0; justify-content: center; gap: 0; }
+      .sidebar.collapsed .menu-item i { margin: 0; }
+
+      /* Submenu */
+      .has-submenu { cursor: pointer; }
+      .submenu-arrow { font-size: 0.8rem !important; transition: transform 0.3s ease; }
+      .has-submenu.open .submenu-arrow { transform: rotate(180deg); }
+      .sidebar.collapsed .submenu-arrow { display: none; }
+      .submenu-container { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: rgba(0,0,0,0.1); }
+      .submenu-container.open { max-height: 200px; }
+      .sidebar.collapsed .submenu-container,
+      .sidebar.collapsed .submenu-container.open { max-height: 0; overflow: hidden; }
+      .submenu-item {
+          display: flex; align-items: center; padding: 10px 18px 10px 48px;
+          color: rgba(255,255,255,0.55); text-decoration: none;
+          font-size: 0.85rem; font-weight: 500; transition: all 0.2s;
+          white-space: nowrap; position: relative;
+      }
+      .submenu-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
+      .submenu-item.active { color: #fff; font-weight: 700; background: rgba(255,255,255,0.05); }
+
+      .sidebar-footer { padding: 10px 14px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.15); flex-shrink: 0; transition: padding 0.3s ease; }
+      .sidebar.collapsed .sidebar-footer { padding: 10px 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+      .btn-logout { display: flex; align-items: center; gap: 12px; color: #f87171; text-decoration: none; font-size: 0.9rem; font-weight: 500; padding: 10px 4px; border-radius: 8px; transition: all 0.2s ease; white-space: nowrap; overflow: hidden; }
+      .btn-logout:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
+      .sidebar.collapsed .btn-logout span { display: none; }
+      .sidebar.collapsed .btn-logout { padding: 10px; gap: 0; justify-content: center; }
+      /* ── NOTIF BELL SIDEBAR ── */
+      .sidebar-notif-wrap { position: relative; margin-bottom: 4px; }
+      .sidebar-notif-btn {
+          display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,0.7);
+          background: none; border: none; cursor: pointer; font-size: 0.9rem; font-weight: 500;
+          padding: 10px 4px; border-radius: 8px; width: 100%; transition: all 0.2s ease; white-space: nowrap;
+      }
+      .sidebar-notif-btn:hover { color: #fff; background: rgba(255,255,255,0.07); }
+      .sidebar.collapsed .sidebar-notif-btn span.notif-label { display: none; }
+      .sidebar.collapsed .sidebar-notif-btn { padding: 10px; gap: 0; justify-content: center; }
+      .notif-badge-sidebar {
+          background: #ef4444; color: #fff; border-radius: 50%;
+          font-size: 0.65rem; font-weight: 700; padding: 1px 5px;
+          min-width: 18px; text-align: center; line-height: 1.4;
+          animation: pulse-notif 1.5s infinite;
+      }
+      @keyframes pulse-notif { 0%,100%{transform:scale(1)}50%{transform:scale(1.2)} }
+      .sidebar-notif-dropdown {
+          display: none; position: absolute; bottom: 110%; left: 0; right: 0;
+          background: #fff; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+          z-index: 2000; min-width: 280px; max-height: 320px; overflow: hidden;
+      }
+      .sidebar.collapsed .sidebar-notif-dropdown { left: 70px; bottom: 0; }
+      .sidebar-notif-dropdown.open { display: block; }
+      .notif-dropdown-head {
+          padding: 12px 16px; font-size: 0.82rem; font-weight: 700; color: #1a2d4f;
+          border-bottom: 1px solid #f0f2f5; display: flex; justify-content: space-between; align-items: center;
+      }
+      .notif-dropdown-body { max-height: 230px; overflow-y: auto; }
+      .notif-item {
+          padding: 11px 16px; border-bottom: 1px solid #f5f7fa; display: flex; gap: 10px;
+          align-items: flex-start; font-size: 0.82rem; color: #444; transition: background 0.15s;
+      }
+      .notif-item:hover { background: #f5f7fa; }
+      .notif-item i { color: #1f59d2; margin-top: 2px; flex-shrink: 0; }
+      .notif-item-text { flex: 1; }
+      .notif-item-time { font-size: 0.72rem; color: #aab; margin-top: 2px; }
+      .notif-empty { padding: 24px 16px; text-align: center; color: #aab; font-size: 0.85rem; }
+
+      /* ── MOBILE HEADER ── */
+      .mobile-header {
+          display: none; background: #fff; padding: 12px 20px;
+          align-items: center; justify-content: space-between;
+          position: sticky; top: 0; z-index: 900;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      }
+      .mobile-logo { display: flex; align-items: center; gap: 10px; }
+      .mobile-logo img { height: 32px; }
+      .mobile-toggle-btn {
+          background: #f0f2f5; border: none; width: 38px; height: 38px;
+          border-radius: 10px; color: #1f59d2; font-size: 1.1rem; cursor: pointer;
+      }
+
+      .main { margin-left: 260px; padding: 30px; transition: all 0.3s cubic-bezier(.4,0,.2,1); }
+      .main.expanded { margin-left: 70px; }
+
+      .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; font-size: 0.9rem; }
+      .alert-success { background: #e6f4ea; color: #1e7e34; border-left: 4px solid #1e7e34; }
+      .alert-danger  { background: #fde8e8; color: #c0392b; border-left: 4px solid #c0392b; }
+
+      /* ── RESPONSIVE ── */
+      @media (max-width: 768px) {
+          .sidebar {
+              left: -280px;
+              width: 260px !important;
+              z-index: 1100;
+              transition: left 0.3s cubic-bezier(.4,0,.2,1);
+          }
+          .sidebar.show { left: 0; }
+          .sidebar.collapsed { width: 260px !important; left: -280px; }
+          .sidebar.collapsed.show { left: 0; }
+          .main { margin-left: 0 !important; padding: 16px 14px; }
+          .mobile-header { display: flex; }
+          .sidebar-overlay {
+              display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+              z-index: 1050; backdrop-filter: blur(2px);
+          }
+          .sidebar-overlay.show { display: block; }
+          .sidebar-toggle-wrap { display: none; }
+      }
+
+      {% block extra_style %}{% endblock %}
+    </style>
+  </head>
+  <body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <header class="mobile-header">
+      <div class="mobile-logo">
+        <img
+          src="{{ url_for('static', filename='img/logo.png') }}"
+          alt="Logo"
+          onerror="this.style.display = 'none'"
+        />
+      </div>
+      <button class="mobile-toggle-btn" id="mobileToggle">
+        <i class="fas fa-bars"></i>
+      </button>
+    </header>
+
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-profile">
+        {%- set nm = current_user.nama.split() -%}
+        <div class="sidebar-avatar">
+          {{ nm[0][0] | upper }}{% if nm | length > 1 %}{{ nm[-1][0] | upper
+          }}{% endif %}
+        </div>
+        <div class="sidebar-user-info">
+          <span class="sidebar-user-name">{{ current_user.nama }}</span>
+          <span class="sidebar-user-sub"
+            >{% if current_user.role == 'admin' %}Admin{% elif current_user.role
+            == 'tim_manajemen' %}Tim Manajemen{% else %}Relawan{% endif %}
+            &middot; {{ current_user.kode_relawan }}</span
+          >
+        </div>
+      </div>
+
+      <div class="sidebar-toggle-wrap">
+        <button
+          class="sidebar-toggle"
+          id="sidebarToggle"
+          title="Tutup/Buka Menu"
+        >
+          <i class="fas fa-chevron-left"></i>
+        </button>
+      </div>
+
+      <div class="sidebar-menu">
+        {% if current_user.role == 'admin' %}
+        <div class="menu-label">Menu Utama</div>
+        <a
+          href="{{ url_for('dashboard.index') }}"
+          class="menu-item {% if request.endpoint == 'dashboard.index' %}active{% endif %}"
+        >
+          <i class="fas fa-chart-pie"></i><span> Dashboard</span>
+        </a>
+        <div class="menu-label">Master Data</div>
+        <div
+          class="menu-item has-submenu {% if request.endpoint in ['master.master_relawan', 'dashboard.laporan_keaktifan', 'dashboard.approval_presensi'] %}active open{% endif %}"
+          onclick="toggleSubmenu('submenu-relawan-admin')"
+        >
+          <i class="fas fa-id-card"></i><span style="flex: 1"> Relawan</span>
+          <i class="fas fa-chevron-down submenu-arrow"></i>
+        </div>
+        <div
+          class="submenu-container {% if request.endpoint in ['master.master_relawan', 'dashboard.laporan_keaktifan', 'dashboard.approval_presensi'] %}open{% endif %}"
+          id="submenu-relawan-admin"
+        >
+          <a
+            href="{{ url_for('master.master_relawan') }}"
+            class="submenu-item {% if request.endpoint == 'master.master_relawan' %}active{% endif %}"
+            >Data Relawan</a
+          >
+          <a
+            href="{{ url_for('dashboard.laporan_keaktifan') }}"
+            class="submenu-item {% if request.endpoint == 'dashboard.laporan_keaktifan' %}active{% endif %}"
+            >Laporan Keaktifan</a
+          >
+          <a
+            href="{{ url_for('dashboard.approval_presensi') }}"
+            class="submenu-item {% if request.endpoint == 'dashboard.approval_presensi' %}active{% endif %}"
+            style="color: #f5a623"
+            ><i class="fas fa-check-double" style="margin-right: 8px"></i>
+            Approval Presensi</a
+          >
+        </div>
+        <div
+          class="menu-item has-submenu {% if request.endpoint in ['master.master_program', 'dashboard.tambah_program', 'dashboard.edit_program', 'dashboard.view_evaluasi_program', 'dashboard.semua_evaluasi'] %}active open{% endif %}"
+          onclick="toggleSubmenu('submenu-program-admin')"
+        >
+          <i class="fas fa-list-alt"></i><span style="flex: 1"> Program</span>
+          <i class="fas fa-chevron-down submenu-arrow"></i>
+        </div>
+        <div
+          class="submenu-container {% if request.endpoint in ['master.master_program', 'dashboard.tambah_program', 'dashboard.edit_program', 'dashboard.view_evaluasi_program', 'dashboard.semua_evaluasi'] %}open{% endif %}"
+          id="submenu-program-admin"
+        >
+          <a
+            href="{{ url_for('master.master_program') }}"
+            class="submenu-item {% if request.endpoint in ['master.master_program', 'dashboard.tambah_program', 'dashboard.edit_program'] %}active{% endif %}"
+            >Daftar Program</a
+          >
+          <a
+            href="{{ url_for('dashboard.semua_evaluasi') }}"
+            class="submenu-item {% if request.endpoint in ['dashboard.semua_evaluasi', 'dashboard.view_evaluasi_program'] %}active{% endif %}"
+            style="color: #f5a623"
+            ><i class="fas fa-clipboard-check" style="margin-right: 8px"></i>
+            Evaluasi PIC</a
+          >
+        </div>
+        <div class="menu-label">Operasional</div>
+        <a
+          href="{{ url_for('dashboard.hak_akses') }}"
+          class="menu-item {% if request.endpoint == 'dashboard.hak_akses' %}active{% endif %}"
+        >
+          <i class="fas fa-user-shield"></i><span> Hak Akses</span>
+        </a>
+        <div class="menu-label">Akun</div>
+        <a
+          href="{{ url_for('dashboard.profil') }}"
+          class="menu-item {% if request.endpoint == 'dashboard.profil' %}active{% endif %}"
+        >
+          <i class="fas fa-user-cog"></i><span> Profil Saya</span>
+        </a>
+
+        {% elif current_user.role == 'tim_manajemen' %}
+        <div class="menu-label">Menu Utama</div>
+        <a
+          href="{{ url_for('tim_manajemen.index') }}"
+          class="menu-item {% if request.endpoint == 'tim_manajemen.index' %}active{% endif %}"
+        >
+          <i class="fas fa-chart-pie"></i><span> Dashboard</span>
+        </a>
+
+        <div class="menu-label">Data</div>
+        <div
+          class="menu-item has-submenu {% if request.endpoint in ['master.master_relawan', 'dashboard.laporan_keaktifan', 'dashboard.approval_presensi'] %}active open{% endif %}"
+          onclick="toggleSubmenu('submenu-relawan-tim-base')"
+        >
+          <i class="fas fa-user-plus"></i
+          ><span style="flex: 1"> Kelola Relawan</span>
+          <i class="fas fa-chevron-down submenu-arrow"></i>
+        </div>
+        <div
+          class="submenu-container {% if request.endpoint in ['master.master_relawan', 'dashboard.laporan_keaktifan', 'dashboard.approval_presensi'] %}open{% endif %}"
+          id="submenu-relawan-tim-base"
+        >
+          <a
+            href="{{ url_for('master.master_relawan') }}"
+            class="submenu-item {% if request.endpoint == 'master.master_relawan' %}active{% endif %}"
+            >Data Relawan</a
+          >
+          <a
+            href="{{ url_for('dashboard.laporan_keaktifan') }}"
+            class="submenu-item {% if request.endpoint == 'dashboard.laporan_keaktifan' %}active{% endif %}"
+            >Laporan Keaktifan</a
+          >
+          <a
+            href="{{ url_for('dashboard.approval_presensi') }}"
+            class="submenu-item {% if request.endpoint == 'dashboard.approval_presensi' %}active{% endif %}"
+            style="color: #f5a623"
+            ><i class="fas fa-check-double" style="margin-right: 8px"></i>
+            Approval Presensi</a
+          >
+        </div>
+        <a
+          href="{{ url_for('master.master_program') }}"
+          class="menu-item {% if request.endpoint == 'master.master_program' %}active{% endif %}"
+        >
+          <i class="fas fa-list-alt"></i><span> Kelola Program</span>
+        </a>
+
+        <div class="menu-label">Akun</div>
+        <a
+          href="{{ url_for('dashboard.profil') }}"
+          class="menu-item {% if request.endpoint == 'dashboard.profil' %}active{% endif %}"
+        >
+          <i class="fas fa-user-cog"></i><span> Profil Saya</span>
+        </a>
+        {% endif %}
+      </div>
+
+      <div class="sidebar-footer">
+        <a
+          href="{{ url_for('auth.logout') }}"
+          class="btn-logout"
+          title="Logout"
+        >
+          <i class="fas fa-sign-out-alt"></i><span> Logout</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="main" id="mainContent">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% for
+      category, message in messages %}
+      <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %} {% endwith %} {% block content %}{% endblock %}
+    </div>
+
+    <script>
+      const sidebar = document.getElementById("sidebar");
+      const main = document.getElementById("mainContent");
+      const overlay = document.getElementById("sidebarOverlay");
+      const mobileBtn = document.getElementById("mobileToggle");
+
+      if (
+        localStorage.getItem("sidebarCollapsed") === "true" &&
+        window.innerWidth > 768
+      ) {
+        sidebar.classList.add("collapsed");
+        main.classList.add("expanded");
+      }
+      document.getElementById("sidebarToggle").addEventListener("click", () => {
+        sidebar.classList.toggle("collapsed");
+        main.classList.toggle("expanded");
+        localStorage.setItem(
+          "sidebarCollapsed",
+          sidebar.classList.contains("collapsed"),
+        );
+      });
+      if (mobileBtn)
+        mobileBtn.onclick = () => {
+          sidebar.classList.add("show");
+          overlay.classList.add("show");
+        };
+      if (overlay)
+        overlay.onclick = () => {
+          sidebar.classList.remove("show");
+          overlay.classList.remove("show");
+        };
+
+      function toggleSubmenu(id) {
+        const container = document.getElementById(id);
+        const parent = container.previousElementSibling;
+        container.classList.toggle("open");
+        parent.classList.toggle("open");
+      }
+
+      // ── Notifikasi Bell ──
+      function toggleNotifDropdown() {
+        document.getElementById("notifDropdown").classList.toggle("open");
+      }
+      document.addEventListener("click", function (e) {
+        const wrap = document.getElementById("notifBellBtn");
+        const dropdown = document.getElementById("notifDropdown");
+        if (
+          dropdown &&
+          wrap &&
+          !wrap.contains(e.target) &&
+          !dropdown.contains(e.target)
+        ) {
+          dropdown.classList.remove("open");
+        }
+      });
+    </script>
+    {% block extra_script %}{% endblock %}
+  </body>
+</html>

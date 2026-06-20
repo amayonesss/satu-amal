@@ -1,0 +1,112 @@
+{% extends 'base_admin.html' %}
+
+{% block title %}Kelola Koordinator Program - Satu Amal{% endblock %}
+
+{% block extra_style %}
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+.topbar h1 { font-size: 1.5rem; color: #1a2d4f; font-weight: 700; }
+
+.card { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); margin-bottom: 28px; }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.card-header h3 { font-size: 1.05rem; color: #1a2d4f; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+
+table { width: 100%; border-collapse: collapse; min-width: 600px; }
+th { background: #f0f5fb; padding: 11px 14px; text-align: left; font-size: 0.85rem; color: #555; font-weight: 700; border-bottom: 2px solid #dde3ef; }
+td { padding: 11px 14px; border-bottom: 1px solid #f0f2f5; font-size: 0.9rem; color: #444; }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; border: none; font-weight: 600; text-decoration: none; transition: all 0.2s; }
+.btn-primary { background: #1f59d2; color: #fff; }
+.btn-primary:hover { background: #1643a3; }
+.btn-danger { background: #e74c3c; color: #fff; }
+.btn-danger:hover { background: #c0392b; }
+.btn-secondary { background: #f0f2f5; color: #555; }
+.btn-secondary:hover { background: #e4e6e9; }
+
+.form-group { margin-bottom: 15px; }
+.form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <h1><i class="fas fa-users-cog" style="color: #1f59d2; margin-right: 10px;"></i>Koordinator Program</h1>
+    <a href="{{ url_for('master.master_program') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Kembali</a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-info-circle"></i> Info Program</h3>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 10px;">
+        <div>
+            <p><strong>Nama Program:</strong> {{ program.nama_program }}</p>
+            <p><strong>Kategori:</strong> {{ program.kategori or '-' }}</p>
+        </div>
+        <div>
+            <p><strong>Kota:</strong> {{ program.kota or '-' }}</p>
+            <p><strong>Waktu:</strong> {{ program.bulan }} {{ program.tahun }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-user-plus"></i> Tambah Koordinator</h3>
+    </div>
+    <form method="POST" style="display: flex; gap: 15px; align-items: flex-end;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="aksi" value="tambah">
+        <div class="form-group" style="flex-grow: 1; margin-bottom: 0;">
+            <select name="user_id" required>
+                <option value="">-- Pilih Relawan --</option>
+                {% for r in relawan_list %}
+                <option value="{{ r.id }}">{{ r.nama }} ({{ r.kode_relawan }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Tambah</button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-list"></i> Daftar Koordinator Lapangan</h3>
+    </div>
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 50px;">No</th>
+                    <th>Nama Koordinator</th>
+                    <th>Kode Relawan</th>
+                    <th>Ditunjuk Oleh</th>
+                    <th>Waktu Ditunjuk</th>
+                    <th style="text-align: center; width: 100px;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for k in koordinator_list %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td><strong>{{ k.user.nama }}</strong></td>
+                    <td>{{ k.user.kode_relawan }}</td>
+                    <td>{{ k.ditunjuk_oleh.nama if k.ditunjuk_oleh else '-' }}</td>
+                    <td>{{ k.created_at.strftime('%d-%m-%Y %H:%M') }}</td>
+                    <td style="text-align: center;">
+                        <form method="POST" onsubmit="return confirm('Hapus koordinator ini?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="aksi" value="hapus">
+                            <input type="hidden" name="koordinator_id" value="{{ k.id }}">
+                            <button type="submit" class="btn btn-danger" style="padding: 5px 10px;" title="Hapus"><i class="fas fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #888;">Belum ada koordinator yang ditunjuk.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,218 @@
+{% extends 'base_admin.html' %}
+
+{% block title %}Evaluasi Program - {{ program.nama_program }}{% endblock %}
+
+{% block extra_style %}
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+.topbar h1 { font-size: 1.4rem; color: #1a2d4f; font-weight: 700; }
+
+.card { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); margin-bottom: 24px; }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.card-header h3 { font-size: 1.05rem; color: #1a2d4f; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.card-header h3 i { color: #1f59d2; }
+
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
+.info-item label { font-size: 0.78rem; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
+.info-item p { font-size: 0.95rem; color: #1a2d4f; font-weight: 600; }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 8px; font-size: 0.88rem; cursor: pointer; border: none; font-weight: 600; text-decoration: none; transition: all 0.2s; }
+.btn-secondary { background: #f0f2f5; color: #555; }
+.btn-secondary:hover { background: #e4e6e9; }
+.btn-info { background: #0ea5e9; color: #fff; }
+.btn-info:hover { background: #0284c7; }
+
+/* Evaluasi card */
+.eval-card {
+    border: 1px solid #e8edf5; border-radius: 12px; padding: 20px;
+    margin-bottom: 16px; position: relative; transition: box-shadow 0.2s;
+}
+.eval-card:hover { box-shadow: 0 4px 20px rgba(31,89,210,0.09); }
+.eval-card-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 16px; flex-wrap: wrap; gap: 8px;
+}
+.eval-pic { display: flex; align-items: center; gap: 10px; }
+.eval-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, #1f59d2, #2e73f2);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
+}
+.eval-pic-name { font-weight: 700; color: #1a2d4f; font-size: 0.95rem; }
+.eval-pic-sub { font-size: 0.78rem; color: #888; margin-top: 2px; }
+.eval-time { font-size: 0.78rem; color: #aab; }
+.eval-badge-pm {
+    background: #e3f5e9; color: #107c41; font-weight: 700;
+    font-size: 0.82rem; padding: 4px 12px; border-radius: 20px;
+    display: inline-flex; align-items: center; gap: 5px;
+}
+.eval-section { margin-top: 14px; }
+.eval-section-label {
+    font-size: 0.75rem; font-weight: 700; color: #888; text-transform: uppercase;
+    letter-spacing: 0.6px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+}
+.eval-section-label i { color: #1f59d2; }
+.eval-section-text {
+    background: #f8faff; border-left: 3px solid #1f59d2; border-radius: 0 8px 8px 0;
+    padding: 10px 14px; font-size: 0.88rem; color: #444; line-height: 1.6;
+}
+.eval-section-text.kendala { border-left-color: #f59e0b; background: #fffbf0; }
+.eval-section-text.empty { color: #bbb; font-style: italic; }
+
+/* Stat mini */
+.stat-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+.stat-mini {
+    flex: 1; min-width: 120px; background: #f8faff;
+    border-radius: 12px; padding: 16px 20px; text-align: center;
+    border: 1px solid #e3ecf8;
+}
+.stat-mini .val { font-size: 1.8rem; font-weight: 800; color: #1f59d2; }
+.stat-mini .lbl { font-size: 0.75rem; color: #888; margin-top: 4px; font-weight: 600; }
+
+.badge-status {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 0.75rem; font-weight: 700;
+}
+.badge-done { background: #e3f5e9; color: #107c41; }
+.badge-pending { background: #fef3c7; color: #b45309; }
+
+.empty-state {
+    text-align: center; padding: 60px 20px; color: #aab;
+}
+.empty-state i { font-size: 3rem; margin-bottom: 12px; display: block; }
+.empty-state p { font-size: 0.95rem; }
+{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <h1><i class="fas fa-clipboard-check" style="color: #1f59d2; margin-right: 10px;"></i>Evaluasi: {{ program.nama_program }}</h1>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="{{ url_for('dashboard.semua_evaluasi') }}" class="btn btn-info">
+            <i class="fas fa-list-alt"></i> Semua Evaluasi
+        </a>
+        <a href="{{ url_for('master.master_program') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Kembali
+        </a>
+    </div>
+</div>
+
+{# Info Program #}
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-info-circle"></i> Detail Program</h3>
+    </div>
+    <div class="info-grid">
+        <div>
+            <div class="info-item"><label>Nama Program</label><p>{{ program.nama_program }}</p></div>
+            <div class="info-item" style="margin-top:14px;"><label>Kategori</label><p>{{ program.kategori or '-' }}</p></div>
+        </div>
+        <div>
+            <div class="info-item"><label>Kota</label><p>{{ program.kota or '-' }}</p></div>
+            <div class="info-item" style="margin-top:14px;"><label>Waktu</label>
+                <p>{% if program.tanggal_pelaksanaan %}{{ program.tanggal_pelaksanaan.strftime('%d') }} {% endif %}{{ program.bulan or '' }} {{ program.tahun or '' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Statistik ringkas #}
+{% set total_pm = evaluasi_list | sum(attribute='jumlah_pm_aktual') %}
+<div class="stat-row">
+    <div class="stat-mini">
+        <div class="val">{{ evaluasi_list | length }}</div>
+        <div class="lbl">Evaluasi Masuk</div>
+    </div>
+    <div class="stat-mini">
+        <div class="val" style="color: #107c41;">{{ total_pm }}</div>
+        <div class="lbl">PM Aktual (Total)</div>
+    </div>
+    <div class="stat-mini">
+        <div class="val" style="color: #f59e0b;">{{ program.jumlah_penerima_manfaat }}</div>
+        <div class="lbl">PM Target</div>
+    </div>
+    <div class="stat-mini">
+        <div class="val" style="color: #6366f1;">{{ koordinator_list | length }}</div>
+        <div class="lbl">Koordinator (PIC)</div>
+    </div>
+</div>
+
+{# PIC yang belum evaluasi #}
+{% set pic_sudah_eval = evaluasi_list | map(attribute='admin_id') | list %}
+{% set ns = namespace(has_pic_belum=false) %}
+{% for k in koordinator_list %}
+    {% if k.user_id not in pic_sudah_eval %}
+        {% set ns.has_pic_belum = true %}
+    {% endif %}
+{% endfor %}
+
+{% if ns.has_pic_belum %}
+<div class="card" style="border-left: 4px solid #f59e0b; background: #fffbf0;">
+    <div class="card-header" style="margin-bottom: 10px;">
+        <h3 style="color:#b45309;"><i class="fas fa-exclamation-triangle"></i> PIC Belum Submit Evaluasi</h3>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        {% for k in koordinator_list %}
+            {% if k.user_id not in pic_sudah_eval %}
+            <span style="background:#fef3c7;color:#b45309;padding:5px 12px;border-radius:20px;font-size:0.82rem;font-weight:600;">
+                <i class="fas fa-user"></i> {{ k.user.nama }}
+            </span>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{# Daftar Evaluasi #}
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-comments"></i> Feedback dari PIC/Koordinator</h3>
+        <span class="badge-status badge-{{ 'done' if evaluasi_list else 'pending' }}">
+            {{ evaluasi_list | length }} evaluasi
+        </span>
+    </div>
+
+    {% if evaluasi_list %}
+        {% for e in evaluasi_list %}
+        <div class="eval-card">
+            <div class="eval-card-header">
+                <div class="eval-pic">
+                    <div class="eval-avatar">
+                        {% set nm = e.admin.nama.split() %}
+                        {{ nm[0][0] | upper }}{% if nm | length > 1 %}{{ nm[-1][0] | upper }}{% endif %}
+                    </div>
+                    <div>
+                        <div class="eval-pic-name">{{ e.admin.nama }}</div>
+                        <div class="eval-pic-sub">{{ e.admin.kode_relawan }} &middot; PIC Program</div>
+                    </div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+                    <span class="eval-badge-pm"><i class="fas fa-users"></i> {{ e.jumlah_pm_aktual }} PM Aktual</span>
+                    <span class="eval-time"><i class="fas fa-clock"></i> {{ e.created_at.strftime('%d %b %Y, %H:%M') }}</span>
+                </div>
+            </div>
+
+            <div class="eval-section">
+                <div class="eval-section-label"><i class="fas fa-check-circle"></i> Catatan Keberhasilan</div>
+                <div class="eval-section-text {% if not e.catatan_keberhasilan %}empty{% endif %}">
+                    {{ e.catatan_keberhasilan or 'Tidak ada catatan keberhasilan.' }}
+                </div>
+            </div>
+
+            <div class="eval-section" style="margin-top: 12px;">
+                <div class="eval-section-label"><i class="fas fa-exclamation-triangle" style="color:#f59e0b;"></i> Kendala & Rekomendasi</div>
+                <div class="eval-section-text kendala {% if not e.kendala_lapangan %}empty{% endif %}">
+                    {{ e.kendala_lapangan or 'Tidak ada catatan kendala.' }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-clipboard" style="color:#dde3ef;"></i>
+            <p>Belum ada evaluasi yang disubmit oleh PIC untuk program ini.</p>
+            <p style="font-size:0.82rem;margin-top:8px;color:#ccc;">Pastikan Anda sudah menunjuk koordinator di program ini.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

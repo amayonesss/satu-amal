@@ -1,0 +1,362 @@
+{% extends 'base_admin.html' %}
+
+{% block title %}Hak Akses{% endblock %}
+
+{% block extra_style %}
+.page-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 28px;
+}
+.page-header h1 { font-size: 1.5rem; color: #1a2d4f; font-weight: 700; }
+.page-header h1 i { color: #1f59d2; margin-right: 8px; }
+.page-header p { color: #888; font-size: 0.88rem; margin-top: 3px; }
+.badge-admin {
+    background: linear-gradient(135deg, #0f3d99, #1f59d2);
+    color: #fff; padding: 7px 16px; border-radius: 20px;
+    font-size: 0.82rem; font-weight: 600;
+    display: flex; align-items: center; gap: 6px;
+}
+
+.card {
+    background: #fff; border-radius: 16px; padding: 28px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.07); margin-bottom: 28px;
+}
+.card-title {
+    font-size: 1rem; font-weight: 700; color: #1a2d4f;
+    display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
+}
+.card-title i { color: #1f59d2; }
+
+/* ── TABLE ── */
+.manage-table { width: 100%; border-collapse: collapse; }
+.manage-table thead th {
+    background: #f0f5fb; padding: 11px 16px;
+    text-align: left; font-size: 0.82rem; color: #555; font-weight: 700;
+}
+.manage-table thead th:first-child { border-radius: 8px 0 0 8px; }
+.manage-table thead th:last-child  { border-radius: 0 8px 8px 0; }
+.manage-table tbody td {
+    padding: 12px 16px; border-bottom: 1px solid #f0f0f0;
+    font-size: 0.88rem; color: #444; vertical-align: middle;
+}
+.manage-table tbody tr:hover { background: #f7faff; }
+.manage-table tbody tr:last-child td { border-bottom: none; }
+
+.avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: linear-gradient(135deg, #1f59d2, #3b82f6);
+    color: #fff; font-size: 0.85rem; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-right: 8px; flex-shrink: 0;
+}
+.avatar-orange { background: linear-gradient(135deg, #e67e22, #f39c12); }
+.user-cell { display: flex; align-items: center; }
+
+/* ── TOGGLE ── */
+.toggle-wrap { display: flex; align-items: center; gap: 10px; }
+.toggle { position: relative; width: 44px; height: 24px; cursor: pointer; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+    position: absolute; inset: 0;
+    background: #ddd; border-radius: 24px; transition: 0.3s;
+}
+.toggle-slider:before {
+    content: ''; position: absolute;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #fff; left: 3px; top: 3px;
+    transition: 0.3s; box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.toggle input:checked + .toggle-slider { background: #27ae60; }
+.toggle input:checked + .toggle-slider:before { transform: translateX(20px); }
+.toggle-label { font-size: 0.83rem; font-weight: 600; color: #555; min-width: 60px; }
+
+.btn-hapus {
+    background: #fde8e8; color: #c0392b; border: none;
+    padding: 6px 12px; border-radius: 7px; cursor: pointer;
+    font-size: 0.82rem; font-weight: 600; transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 5px;
+}
+.btn-hapus:hover { background: #e74c3c; color: #fff; transform: translateY(-1px); }
+
+.empty-state { text-align: center; padding: 32px; color: #aaa; }
+.empty-state i { font-size: 2rem; display: block; margin-bottom: 10px; color: #d0d5dd; }
+
+/* ── PAGINATION ── */
+.pagination-container .btn-page {
+    border: 1px solid #dde3ef; background: #fff; color: #555;
+    padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.82rem;
+}
+.pagination-container .btn-page.active { background: #1f59d2; color: #fff; border-color: #1f59d2; }
+.pagination-container .btn-page:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@media (max-width: 768px) {
+    .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .badge-admin { width: 100%; justify-content: center; }
+    .card { padding: 20px; }
+    .manage-table thead th:nth-child(3), 
+    .manage-table tbody td:nth-child(3) { display: none; }
+}
+
+/* ── SEARCH BAR ── */
+.search-wrapper { margin-bottom: 20px; }
+.search-box {
+    display: flex; align-items: center; gap: 12px;
+    background: #f5f7fa; border: 1.5px solid #dde3ef;
+    border-radius: 12px; padding: 10px 16px;
+    transition: all 0.2s; max-width: 400px;
+}
+.search-box:focus-within { border-color: #1f59d2; background: #fff; box-shadow: 0 0 0 4px rgba(31,89,210,0.1); }
+.search-box i { color: #aab; font-size: 0.9rem; }
+.search-box input { border: none; outline: none; background: transparent; font-size: 0.9rem; color: #333; width: 100%; }
+.search-box input::placeholder { color: #bbc; }
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="fas fa-user-shield"></i> Hak Akses</h1>
+        <p>Kelola izin akses untuk setiap role pengguna</p>
+    </div>
+    <span class="badge-admin"><i class="fas fa-shield-alt"></i> Administrator</span>
+</div>
+
+<!-- ═══ HAK AKSES ═══ -->
+<div class="card">
+    <div class="card-title"><i class="fas fa-users-cog"></i> Hak Akses</div>
+
+    {% if tim_list %}
+    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+    <table class="manage-table" id="tableTim">
+        <thead>
+            <tr>
+                <th style="width:50px">No</th>
+                <th>Nama</th>
+                <th>Kode</th>
+                <th>Akses CRUD</th>
+                <th style="width:100px">Hapus</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in tim_list %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>
+                    <div class="user-cell">
+                        <span class="avatar">{{ user.nama[0]|upper }}</span>
+                        {{ user.nama }}
+                    </div>
+                </td>
+                <td>
+                    <code style="background:#f0f5fb;padding:3px 8px;border-radius:6px;font-size:0.82rem">
+                        {{ user.kode_relawan }}
+                    </code>
+                </td>
+                <td>
+                    <form method="POST" id="form-toggle-{{ user.id }}" style="display:none">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <input type="hidden" name="akses_crud" id="val-{{ user.id }}"
+                            value="{{ '1' if akses_list.get(user.id) and akses_list[user.id].akses_crud else '0' }}">
+                    </form>
+                    <div class="toggle-wrap">
+                        <label class="toggle">
+                            <input type="checkbox"
+                                id="chk-{{ user.id }}"
+                                {% if akses_list.get(user.id) and akses_list[user.id].akses_crud %}checked{% endif %}
+                                onchange="submitToggle({{ user.id }})">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label" id="lbl-{{ user.id }}">
+                            {% if akses_list.get(user.id) and akses_list[user.id].akses_crud %}Aktif{% else %}Nonaktif{% endif %}
+                        </span>
+                    </div>
+                </td>
+                <td>
+                    <form method="POST" onsubmit="return confirm('Hapus hak akses {{ user.nama }}?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <input type="hidden" name="akses_crud" value="0">
+                        <input type="hidden" name="hapus" value="1">
+                        <button type="submit" class="btn-hapus">
+                            <i class="fas fa-trash"></i> Hapus
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-users"></i>
+        Belum ada user yang diberi hak akses.
+    </div>
+    {% endif %}
+</div>
+
+<!-- ═══ RELAWAN (VIEW ONLY) ═══ -->
+<div class="card">
+    <div class="card-title">
+        <i class="fas fa-hands-helping"></i> Daftar Relawan
+        <span style="margin-left:auto;background:#e8f4fd;color:#1f59d2;
+            padding:3px 12px;border-radius:20px;font-size:0.75rem;font-weight:600">
+            <i class="fas fa-eye"></i> View Only
+        </span>
+    </div>
+
+    <div class="search-wrapper">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="inputSearchRelawan" placeholder="Cari nama atau kode relawan...">
+        </div>
+    </div>
+
+    {% if relawan_list %}
+    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+    <table class="manage-table" id="tableRelawan">
+        <thead>
+            <tr>
+                <th style="width:50px">No</th>
+                <th>Nama</th>
+                <th>Kode</th>
+                <th>Status Akun</th>
+                <th>Akses Default</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in relawan_list %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>
+                    <div class="user-cell">
+                        <span class="avatar avatar-orange">{{ user.nama[0]|upper }}</span>
+                        {{ user.nama }}
+                    </div>
+                </td>
+                <td>
+                    <code style="background:#fff4e6;padding:3px 8px;border-radius:6px;font-size:0.82rem">
+                        {{ user.kode_relawan }}
+                    </code>
+                </td>
+                <td>
+                    {% if user.aktif %}
+                    <span style="background:#e3f9e5;color:#1a7a2e;padding:4px 12px;
+                        border-radius:20px;font-size:0.78rem;font-weight:600">
+                        <i class="fas fa-circle" style="font-size:0.45rem;vertical-align:middle"></i> Aktif
+                    </span>
+                    {% else %}
+                    <span style="background:#fde8e8;color:#c0392b;padding:4px 12px;
+                        border-radius:20px;font-size:0.78rem;font-weight:600">
+                        <i class="fas fa-circle" style="font-size:0.45rem;vertical-align:middle"></i> Nonaktif
+                    </span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span style="background:#e8f4fd;color:#1f59d2;padding:4px 12px;
+                        border-radius:20px;font-size:0.78rem;font-weight:600">
+                        <i class="fas fa-eye"></i> View Only
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-user-friends"></i>
+        Belum ada relawan terdaftar.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+function submitToggle(userId) {
+    const chk = document.getElementById('chk-' + userId);
+    const val = document.getElementById('val-' + userId);
+    const lbl = document.getElementById('lbl-' + userId);
+    val.value = chk.checked ? '1' : '0';
+    lbl.textContent = chk.checked ? 'Aktif' : 'Nonaktif';
+    document.getElementById('form-toggle-' + userId).submit();
+}
+
+function initPaginationWithFilter(tableId, rowsPerPage, searchInputId) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    const allRows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('td[colspan]'));
+    const searchInput = searchInputId ? document.getElementById(searchInputId) : null;
+    
+    const paginationContainer = document.createElement('div');
+    paginationContainer.className = 'pagination-container';
+    paginationContainer.style.display = 'flex';
+    paginationContainer.style.justifyContent = 'center';
+    paginationContainer.style.alignItems = 'center';
+    paginationContainer.style.gap = '8px';
+    paginationContainer.style.marginTop = '20px';
+    table.parentNode.insertBefore(paginationContainer, table.nextSibling);
+    
+    let currentPage = 1;
+
+    function update() {
+        const q = searchInput ? searchInput.value.toLowerCase() : '';
+        const filtered = allRows.filter(row => {
+            const match = row.innerText.toLowerCase().includes(q);
+            row.style.display = 'none';
+            return match;
+        });
+        
+        const total = Math.ceil(filtered.length / rowsPerPage);
+        if (currentPage > total) currentPage = total || 1;
+        if (currentPage < 1) currentPage = 1;
+        
+        const start = (currentPage - 1) * rowsPerPage;
+        filtered.slice(start, start + rowsPerPage).forEach(r => r.style.display = '');
+        
+        renderControls(total);
+    }
+    
+    function renderControls(total) {
+        paginationContainer.innerHTML = '';
+        if (total <= 1) return;
+        
+        const prev = document.createElement('button');
+        prev.innerHTML = '&#10094; Prev'; prev.className = 'btn-page';
+        prev.disabled = currentPage === 1;
+        prev.onclick = () => { if (currentPage > 1) { currentPage--; update(); } };
+        paginationContainer.appendChild(prev);
+        
+        for (let i = 1; i <= total; i++) {
+            if (i === 1 || i === total || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                btn.className = i === currentPage ? 'btn-page active' : 'btn-page';
+                btn.onclick = () => { currentPage = i; update(); };
+                paginationContainer.appendChild(btn);
+            } else if (i === currentPage - 2 || i === currentPage + 2) {
+                const dots = document.createElement('span');
+                dots.textContent = '...';
+                paginationContainer.appendChild(dots);
+            }
+        }
+        
+        const next = document.createElement('button');
+        next.innerHTML = 'Next &#10095;'; next.className = 'btn-page';
+        next.disabled = currentPage === total;
+        next.onclick = () => { if (currentPage < total) { currentPage++; update(); } };
+        paginationContainer.appendChild(next);
+    }
+    
+    if (searchInput) searchInput.oninput = () => { currentPage = 1; update(); };
+    update();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initPaginationWithFilter('tableTim', 10, null);
+    initPaginationWithFilter('tableRelawan', 10, 'inputSearchRelawan');
+});
+</script>
+{% endblock %}
