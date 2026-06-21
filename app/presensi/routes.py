@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from app.presensi import presensi_bp
 from app.models import User, Presensi, Program, Notifikasi, FotoKegiatan
 from app import db
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import base64
 import os
 import json
@@ -194,7 +194,7 @@ def scan_wajah():
             nama_program=nama_program
         ).order_by(Presensi.jam_masuk.desc()).first()
 
-        now = datetime.now()
+        now = datetime.utcnow() + timedelta(hours=7)
 
         if presensi is None or presensi.jam_keluar is not None or presensi.status == 'ditolak':
             presensi_baru = Presensi(
