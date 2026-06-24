@@ -5,6 +5,7 @@ services:
     container_name: satu-amal-db
     restart: unless-stopped
     environment:
+      TZ: Asia/Jakarta
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: satu_amal
       MYSQL_USER: satuamal
@@ -29,6 +30,7 @@ services:
       - ./uploads:/app/uploads
     env_file: .env
     environment:
+      TZ: Asia/Jakarta
       DATABASE_URL: mysql+pymysql://satuamal:${MYSQL_PASSWORD}@db/satu_amal
     depends_on:
       db:

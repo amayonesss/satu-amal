@@ -58,7 +58,7 @@ def forgot_password():
         if user:
             token = secrets.token_urlsafe(32)
             user.reset_token = token
-            user.reset_token_exp = datetime.utcnow() + timedelta(hours=1)
+            user.reset_token_exp = datetime.now() + timedelta(hours=1)
             db.session.commit()
 
             reset_url = url_for('auth.reset_password', token=token, _external=True)
@@ -90,7 +90,7 @@ Tim Satu Amal Indonesia
 def reset_password(token):
     user = User.query.filter_by(reset_token=token).first()
 
-    if not user or user.reset_token_exp < datetime.utcnow():
+    if not user or user.reset_token_exp < datetime.now():
         flash('Link reset password tidak valid atau sudah kadaluarsa.', 'danger')
         return redirect(url_for('auth.forgot_password'))
 

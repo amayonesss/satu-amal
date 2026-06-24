@@ -194,7 +194,7 @@ def scan_wajah():
             nama_program=nama_program
         ).order_by(Presensi.jam_masuk.desc()).first()
 
-        now = datetime.utcnow() + timedelta(hours=7)
+        now = datetime.now()
 
         if presensi is None or presensi.jam_keluar is not None or presensi.status == 'ditolak':
             presensi_baru = Presensi(
