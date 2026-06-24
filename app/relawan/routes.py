@@ -50,7 +50,7 @@ def index():
     # Ambil daftar unik program yang pernah dihadiri relawan ini
     program_diikuti = db.session.query(Program).join(
         Presensi, Presensi.nama_program == Program.nama_program
-    ).filter(Presensi.user_id == current_user.id).distinct().all()
+    ).filter(Presensi.user_id == current_user.id, Presensi.status == 'hadir').distinct().all()
     
     total_pm = sum(p.jumlah_penerima_manfaat or 0 for p in program_diikuti)
     total_lokasi = len(set(p.kota for p in program_diikuti if p.kota))
@@ -81,7 +81,8 @@ def index():
         Presensi.nama_program, func.count(Presensi.id)
     ).filter(
         Presensi.user_id == current_user.id,
-        Presensi.nama_program != None
+        Presensi.nama_program != None,
+        Presensi.status == 'hadir'
     ).group_by(Presensi.nama_program).all()
 
     cat_labels = [p[0][:20] + '...' if len(p[0]) > 20 else p[0] for p in program_counts]
