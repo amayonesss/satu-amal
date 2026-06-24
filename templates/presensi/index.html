@@ -933,7 +933,7 @@
               id="video"
               autoplay
               playsinline
-              style="width: 100%; height: 100%; object-fit: cover"
+              style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1)"
             ></video>
             <canvas
               id="drawCanvas"
@@ -944,6 +944,7 @@
                 width: 100%;
                 height: 100%;
                 pointer-events: none;
+                transform: scaleX(-1);
               "
             ></canvas>
           </div>
