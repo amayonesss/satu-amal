@@ -1328,7 +1328,7 @@
             }
           } else if (currentChallenge === "turn_left") {
             debugEar.textContent = `Yaw: ${yawRatio.toFixed(3)}`;
-            if (yawRatio < 0.3) {
+            if (yawRatio > 0.7) {
               challengeState = 1;
               livenessIcon.textContent = "\u2B05\uFE0F";
               livenessMsg.textContent = "Bagus! Sekarang lihat LURUS ke kamera";
@@ -1345,7 +1345,7 @@
             }
           } else if (currentChallenge === "turn_right") {
             debugEar.textContent = `Yaw: ${yawRatio.toFixed(3)}`;
-            if (yawRatio > 0.7) {
+            if (yawRatio < 0.3) {
               challengeState = 1;
               livenessIcon.textContent = "\u27A1\uFE0F";
               livenessMsg.textContent = "Bagus! Sekarang lihat LURUS ke kamera";
