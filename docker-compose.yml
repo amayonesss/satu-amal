@@ -1,7 +1,7 @@
 name: dar-sai
 services:
   db:
-    root:
+    ports:
       - "3306:3306"
     image: mysql:8.0
     container_name: satu-amal-db
