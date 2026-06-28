@@ -126,7 +126,13 @@ and current_user.tim_akses and current_user.tim_akses[0].akses_crud) %}
       <tbody id="programBody">
         {% for p in program_list %}
         <tr>
-          <td>{{ loop.index }}</td>
+          <td>
+            {% if pagination %}
+              {{ (pagination.page - 1) * pagination.per_page + loop.index }}
+            {% else %}
+              {{ loop.index }}
+            {% endif %}
+          </td>
           <td>{{ p.nama_program }}</td>
           <td><span class="badge">{{ p.kategori or '-' }}</span></td>
           <td>
