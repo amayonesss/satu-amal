@@ -27,7 +27,7 @@ def master_program():
     q = request.args.get('q', '').strip()
     page = request.args.get('page', 1, type=int)
 
-    base_query = Program.query.order_by(Program.id.desc())
+    base_query = Program.query.order_by(Program.id)
 
     if q:
         base_query = base_query.filter(
