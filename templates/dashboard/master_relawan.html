@@ -1,582 +1,621 @@
-{% extends 'base_admin.html' %}
-
-{% block title %}Kelola Relawan{% endblock %}
-
-{% block extra_style %}
-.page-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 28px;
-}
-.page-header h1 { font-size: 1.5rem; color: #1a2d4f; font-weight: 700; }
-.page-header h1 i { color: #1f59d2; margin-right: 8px; }
-
-.card {
-    background: #fff; border-radius: 16px; padding: 28px;
-    box-shadow: 0 2px 16px rgba(0,0,0,0.07); margin-bottom: 28px;
-}
-.card-title {
-    font-size: 1rem; font-weight: 700; color: #1a2d4f;
-    display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
-}
-.card-title i { color: #1f59d2; }
-
-/* ── TOOLBAR ── */
-.toolbar {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 18px; gap: 12px; flex-wrap: wrap;
-}
-.search-bar {
-    display: flex; align-items: center; gap: 10px;
-    background: #f5f7fa; border: 1.5px solid #dde3ef;
-    border-radius: 10px; padding: 9px 14px; flex: 1; max-width: 400px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-.search-bar:focus-within {
-    border-color: #1f59d2; box-shadow: 0 0 0 3px rgba(31,89,210,0.1); background: #fff;
-}
-.search-bar i { color: #aab; font-size: 0.88rem; }
-.search-bar input {
-    border: none; outline: none; font-size: 0.88rem;
-    color: #444; background: transparent; width: 100%;
-}
-.search-bar input::placeholder { color: #bbc; }
-.count-info { font-size: 0.82rem; color: #888; white-space: nowrap; }
-.toolbar-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-
-/* ── BUTTONS ── */
-.btn {
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 9px 16px; border-radius: 9px; font-size: 0.87rem;
-    cursor: pointer; border: none; font-weight: 600;
-    transition: all 0.2s; text-decoration: none;
-}
-.btn-primary { background: linear-gradient(135deg, #1f59d2, #3b82f6); color: #fff; }
-.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(31,89,210,0.35); }
-.btn-warning { background: #f5a623; color: #fff; }
-.btn-warning:hover { background: #e09510; transform: translateY(-1px); }
-.btn-danger  { background: #e74c3c; color: #fff; }
-.btn-danger:hover  { background: #c0392b; transform: translateY(-1px); }
-.file-input { display: none; }
-
-/* ── TABLE ── */
-.manage-table { width: 100%; border-collapse: collapse; }
-.manage-table thead th {
-    background: #f0f5fb; padding: 11px 16px;
-    text-align: left; font-size: 0.82rem; color: #555; font-weight: 700;
-}
-.manage-table thead th:first-child { border-radius: 8px 0 0 8px; }
-.manage-table thead th:last-child  { border-radius: 0 8px 8px 0; }
-.manage-table tbody td {
-    padding: 12px 16px; border-bottom: 1px solid #f0f0f0;
-    font-size: 0.88rem; color: #444; vertical-align: middle;
-}
-.manage-table tbody tr:hover { background: #f7faff; }
-.manage-table tbody tr:last-child td { border-bottom: none; }
-
-.avatar {
-    width: 32px; height: 32px; border-radius: 50%;
-    background: linear-gradient(135deg, #1f59d2, #3b82f6);
-    color: #fff; font-size: 0.82rem; font-weight: 700;
-    display: inline-flex; align-items: center; justify-content: center;
-    margin-right: 8px; flex-shrink: 0;
-}
-.avatar-green { background: linear-gradient(135deg, #1a7a2e, #27ae60); }
-.user-cell { display: flex; align-items: center; }
-
-.badge {
-    padding: 3px 10px; border-radius: 20px;
-    font-size: 0.75rem; font-weight: 600;
-}
-.badge-aktif    { background: #e3f9e5; color: #1a7a2e; }
-.badge-nonaktif { background: #fde8e8; color: #c0392b; }
-.badge-tim      { background: #e8f4fd; color: #1f59d2; }
-.badge-relawan  { background: #fff4e6; color: #e67e22; }
-
-.empty-state { text-align: center; padding: 32px; color: #aaa; }
-.empty-state i { font-size: 2rem; display: block; margin-bottom: 10px; color: #d0d5dd; }
-.no-results { display: none; text-align: center; padding: 24px; color: #aaa; }
-
-/* ── MODAL ── */
-.modal-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.45); z-index: 1000;
-    align-items: center; justify-content: center;
-}
-.modal-overlay.active { display: flex; }
-.modal-box {
-    background: #fff; border-radius: 16px; padding: 32px;
-    width: 100%; max-width: 580px; position: relative;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.18);
-    animation: modalIn 0.22s ease;
-}
-@keyframes modalIn {
-    from { opacity: 0; transform: translateY(-18px) scale(0.97); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-.modal-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 24px;
-}
-.modal-header h2 {
-    font-size: 1.15rem; font-weight: 700; color: #1a2d4f;
-    display: flex; align-items: center; gap: 9px;
-}
-.modal-header h2 i { color: #1f59d2; }
-.modal-close {
-    background: none; border: none; font-size: 1.2rem;
-    color: #aaa; cursor: pointer; line-height: 1;
-    transition: color 0.2s;
-}
-.modal-close:hover { color: #e74c3c; }
-.modal-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.modal-form-group { margin-bottom: 16px; }
-.modal-form-group label {
-    display: block; font-size: 0.84rem; font-weight: 600;
-    color: #555; margin-bottom: 6px;
-}
-.modal-form-group input,
-.modal-form-group select {
-    width: 100%; padding: 10px 14px;
-    border: 1.5px solid #dde3ef; border-radius: 8px;
-    font-size: 0.9rem; color: #2c3e50; outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-.modal-form-group input:hover,
-.modal-form-group select:hover { border-color: #1f59d2; }
-.modal-form-group input:focus,
-.modal-form-group select:focus {
-    border-color: #1f59d2; box-shadow: 0 0 0 3px rgba(31,89,210,0.1);
-}
-.modal-footer { display: flex; gap: 10px; margin-top: 8px; }
-.btn-modal-save {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 10px 22px; background: #1f59d2; color: #fff;
-    border: none; border-radius: 8px; font-size: 0.9rem;
-    font-weight: 600; cursor: pointer; transition: all 0.2s;
-}
-.btn-modal-save:hover { background: #1646ad; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(31,89,210,0.3); }
-.btn-modal-cancel {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 10px 18px; background: #e2e8f0; color: #4a5568;
-    border: none; border-radius: 8px; font-size: 0.9rem;
-    font-weight: 600; cursor: pointer; transition: all 0.2s;
-}
-.btn-modal-cancel:hover { background: #cbd5e0; }
-
-/* ── PAGINATION ── */
-.pagination-container .btn-page {
-    padding: 6px 12px; border: 1px solid #dde3ef; border-radius: 6px;
-    background: #fff; color: #4a5568; cursor: pointer; font-size: 0.85rem;
-    transition: all 0.2s;
-}
-.pagination-container .btn-page:hover:not(:disabled) { background: #f0f5fb; border-color: #1f59d2; color: #1f59d2; }
-.pagination-container .btn-page.active { background: #1f59d2; color: #fff; border-color: #1f59d2; font-weight: 600; }
-.pagination-container .btn-page:disabled { opacity: 0.5; cursor: not-allowed; }
-
-@media (max-width: 768px) {
-    .toolbar { flex-direction: column; align-items: stretch; }
-    .search-bar { max-width: none; }
-    .toolbar-actions { justify-content: space-between; }
-    .btn { width: 100%; justify-content: center; }
-    .modal-box { padding: 20px; width: 95%; }
-    .modal-form-row { grid-template-columns: 1fr; gap: 0; }
-    .manage-table thead th:nth-child(4), 
-    .manage-table tbody td:nth-child(4) { display: none; } /* Sembunyikan kolom kurang penting di HP */
-}
-{% endblock %}
-
-{% block content %}
-{% set can_crud = current_user.role == 'admin' or (current_user.role == 'tim_manajemen' and current_user.tim_akses and current_user.tim_akses[0].akses_crud) %}
+{% extends 'base_admin.html' %} {% block title %}Kelola Relawan{% endblock %} {%
+block extra_style %} .page-header { display: flex; justify-content:
+space-between; align-items: center; margin-bottom: 28px; } .page-header h1 {
+font-size: 1.5rem; color: #1a2d4f; font-weight: 700; } .page-header h1 i {
+color: #1f59d2; margin-right: 8px; } .card { background: #fff; border-radius:
+16px; padding: 28px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); margin-bottom:
+28px; } .card-title { font-size: 1rem; font-weight: 700; color: #1a2d4f;
+display: flex; align-items: center; gap: 8px; margin-bottom: 20px; } .card-title
+i { color: #1f59d2; } /* ── TOOLBAR ── */ .toolbar { display: flex; align-items:
+center; justify-content: space-between; margin-bottom: 18px; gap: 12px;
+flex-wrap: wrap; } .search-bar { display: flex; align-items: center; gap: 10px;
+background: #f5f7fa; border: 1.5px solid #dde3ef; border-radius: 10px; padding:
+9px 14px; flex: 1; max-width: 400px; transition: border-color 0.2s, box-shadow
+0.2s; } .search-bar:focus-within { border-color: #1f59d2; box-shadow: 0 0 0 3px
+rgba(31,89,210,0.1); background: #fff; } .search-bar i { color: #aab; font-size:
+0.88rem; } .search-bar input { border: none; outline: none; font-size: 0.88rem;
+color: #444; background: transparent; width: 100%; } .search-bar
+input::placeholder { color: #bbc; } .count-info { font-size: 0.82rem; color:
+#888; white-space: nowrap; } .toolbar-actions { display: flex; gap: 10px;
+flex-wrap: wrap; } /* ── BUTTONS ── */ .btn { display: inline-flex; align-items:
+center; gap: 7px; padding: 9px 16px; border-radius: 9px; font-size: 0.87rem;
+cursor: pointer; border: none; font-weight: 600; transition: all 0.2s;
+text-decoration: none; } .btn-primary { background: linear-gradient(135deg,
+#1f59d2, #3b82f6); color: #fff; } .btn-primary:hover { transform:
+translateY(-1px); box-shadow: 0 4px 12px rgba(31,89,210,0.35); } .btn-warning {
+background: #f5a623; color: #fff; } .btn-warning:hover { background: #e09510;
+transform: translateY(-1px); } .btn-danger { background: #e74c3c; color: #fff; }
+.btn-danger:hover { background: #c0392b; transform: translateY(-1px); }
+.file-input { display: none; } /* ── TABLE ── */ .manage-table { width: 100%;
+border-collapse: collapse; } .manage-table thead th { background: #f0f5fb;
+padding: 11px 16px; text-align: left; font-size: 0.82rem; color: #555;
+font-weight: 700; } .manage-table thead th:first-child { border-radius: 8px 0 0
+8px; } .manage-table thead th:last-child { border-radius: 0 8px 8px 0; }
+.manage-table tbody td { padding: 12px 16px; border-bottom: 1px solid #f0f0f0;
+font-size: 0.88rem; color: #444; vertical-align: middle; } .manage-table tbody
+tr:hover { background: #f7faff; } .manage-table tbody tr:last-child td {
+border-bottom: none; } .avatar { width: 32px; height: 32px; border-radius: 50%;
+background: linear-gradient(135deg, #1f59d2, #3b82f6); color: #fff; font-size:
+0.82rem; font-weight: 700; display: inline-flex; align-items: center;
+justify-content: center; margin-right: 8px; flex-shrink: 0; } .avatar-green {
+background: linear-gradient(135deg, #1a7a2e, #27ae60); } .user-cell { display:
+flex; align-items: center; } .badge { padding: 3px 10px; border-radius: 20px;
+font-size: 0.75rem; font-weight: 600; } .badge-aktif { background: #e3f9e5;
+color: #1a7a2e; } .badge-nonaktif { background: #fde8e8; color: #c0392b; }
+.badge-tim { background: #e8f4fd; color: #1f59d2; } .badge-relawan { background:
+#fff4e6; color: #e67e22; } .empty-state { text-align: center; padding: 32px;
+color: #aaa; } .empty-state i { font-size: 2rem; display: block; margin-bottom:
+10px; color: #d0d5dd; } .no-results { display: none; text-align: center;
+padding: 24px; color: #aaa; } /* ── MODAL ── */ .modal-overlay { display: none;
+position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000;
+align-items: center; justify-content: center; } .modal-overlay.active { display:
+flex; } .modal-box { background: #fff; border-radius: 16px; padding: 32px;
+width: 100%; max-width: 580px; position: relative; box-shadow: 0 8px 40px
+rgba(0,0,0,0.18); animation: modalIn 0.22s ease; } @keyframes modalIn { from {
+opacity: 0; transform: translateY(-18px) scale(0.97); } to { opacity: 1;
+transform: translateY(0) scale(1); } } .modal-header { display: flex;
+align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.modal-header h2 { font-size: 1.15rem; font-weight: 700; color: #1a2d4f;
+display: flex; align-items: center; gap: 9px; } .modal-header h2 i { color:
+#1f59d2; } .modal-close { background: none; border: none; font-size: 1.2rem;
+color: #aaa; cursor: pointer; line-height: 1; transition: color 0.2s; }
+.modal-close:hover { color: #e74c3c; } .modal-form-row { display: grid;
+grid-template-columns: 1fr 1fr; gap: 16px; } .modal-form-group { margin-bottom:
+16px; } .modal-form-group label { display: block; font-size: 0.84rem;
+font-weight: 600; color: #555; margin-bottom: 6px; } .modal-form-group input,
+.modal-form-group select { width: 100%; padding: 10px 14px; border: 1.5px solid
+#dde3ef; border-radius: 8px; font-size: 0.9rem; color: #2c3e50; outline: none;
+transition: border-color 0.2s, box-shadow 0.2s; } .modal-form-group input:hover,
+.modal-form-group select:hover { border-color: #1f59d2; } .modal-form-group
+input:focus, .modal-form-group select:focus { border-color: #1f59d2; box-shadow:
+0 0 0 3px rgba(31,89,210,0.1); } .modal-footer { display: flex; gap: 10px;
+margin-top: 8px; } .btn-modal-save { display: inline-flex; align-items: center;
+gap: 8px; padding: 10px 22px; background: #1f59d2; color: #fff; border: none;
+border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+transition: all 0.2s; } .btn-modal-save:hover { background: #1646ad; transform:
+translateY(-1px); box-shadow: 0 4px 14px rgba(31,89,210,0.3); }
+.btn-modal-cancel { display: inline-flex; align-items: center; gap: 8px;
+padding: 10px 18px; background: #e2e8f0; color: #4a5568; border: none;
+border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+transition: all 0.2s; } .btn-modal-cancel:hover { background: #cbd5e0; } /* ──
+PAGINATION ── */ .pagination-container .btn-page { padding: 6px 12px; border:
+1px solid #dde3ef; border-radius: 6px; background: #fff; color: #4a5568; cursor:
+pointer; font-size: 0.85rem; transition: all 0.2s; } .pagination-container
+.btn-page:hover:not(:disabled) { background: #f0f5fb; border-color: #1f59d2;
+color: #1f59d2; } .pagination-container .btn-page.active { background: #1f59d2;
+color: #fff; border-color: #1f59d2; font-weight: 600; } .pagination-container
+.btn-page:disabled { opacity: 0.5; cursor: not-allowed; } @media (max-width:
+768px) { .toolbar { flex-direction: column; align-items: stretch; } .search-bar
+{ max-width: none; } .toolbar-actions { justify-content: space-between; } .btn {
+width: 100%; justify-content: center; } .modal-box { padding: 20px; width: 95%;
+} .modal-form-row { grid-template-columns: 1fr; gap: 0; } .manage-table thead
+th:nth-child(4), .manage-table tbody td:nth-child(4) { display: none; } /*
+Sembunyikan kolom kurang penting di HP */ } {% endblock %} {% block content %}
+{% set can_crud = current_user.role == 'admin' or (current_user.role ==
+'tim_manajemen' and current_user.tim_akses and
+current_user.tim_akses[0].akses_crud) %}
 
 <div class="page-header">
-    <h1><i class="fas fa-users"></i> {% if can_crud %}Kelola Relawan{% else %}Daftar Relawan{% endif %}</h1>
+  <h1>
+    <i class="fas fa-users"></i> {% if can_crud %}Kelola Relawan{% else %}Daftar
+    Relawan{% endif %}
+  </h1>
 </div>
 
-
-
 <div class="card">
-    <div class="card-title"><i class="fas fa-list"></i> Daftar Relawan {% if current_user.role == 'admin' %}& Tim Manajemen{% endif %}</div>
+  <div class="card-title">
+    <i class="fas fa-list"></i> Daftar Relawan {% if current_user.role ==
+    'admin' %}& Tim Manajemen{% endif %}
+  </div>
 
-    <div class="toolbar">
-        <div class="search-bar">
-            <i class="fas fa-search"></i>
-            <input type="text" id="searchInput" placeholder="Cari nama, kode, atau role...">
-        </div>
-        <span class="count-info" id="countInfo"></span>
-        {% if can_crud %}
-        <div class="toolbar-actions">
-            <button type="button" class="btn btn-primary" onclick="document.getElementById('tambahModal').classList.add('active')">
-                <i class="fas fa-plus"></i> Tambah Manual
-            </button>
-            <form method="POST" action="{{ url_for('dashboard.import_relawan') }}" enctype="multipart/form-data">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="file" name="file" class="file-input" id="fileImport" accept=".xlsx,.csv" onchange="this.form.submit()">
-                <button type="button" class="btn btn-warning" onclick="document.getElementById('fileImport').click()">
-                    <i class="fas fa-upload"></i> Import Excel
-                </button>
-            </form>
-        </div>
-        {% endif %}
+  <div class="toolbar">
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Cari nama, kode, atau role..."
+      />
     </div>
-
-    {% if relawan_list %}
-    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-    <table class="manage-table" id="relawanTable" style="margin-top:18px">
-        <thead>
-            <tr>
-                <th style="width:50px">No</th>
-                <th>Nama</th>
-                <th>Kode</th>
-                {% if current_user.role == 'admin' %}<th>Role</th>{% endif %}
-                <th>Status</th>
-                <th>Status Wajah</th>
-                {% if can_crud %}
-                <th>Aksi</th>
-                {% else %}
-                <th>Bergabung</th>
-                {% endif %}
-            </tr>
-        </thead>
-        <tbody id="relawanBody">
-            {% for user in relawan_list %}
-            <tr>
-                <td>{{ loop.index }}</td>
-                <td>
-                    <div class="user-cell">
-                        <span class="avatar {% if user.role == 'tim_manajemen' %}avatar-green{% endif %}">
-                            {{ user.nama[0]|upper }}
-                        </span>
-                        {{ user.nama }}
-                    </div>
-                </td>
-                <td>
-                    <code style="background:#f0f5fb;padding:3px 8px;border-radius:6px;font-size:0.82rem">
-                        {{ user.kode_relawan }}
-                    </code>
-                </td>
-                {% if current_user.role == 'admin' %}
-                <td>
-                    {% if user.role == 'tim_manajemen' %}
-                        <span class="badge badge-tim"><i class="fas fa-user-tie"></i> Tim Manajemen</span>
-                    {% else %}
-                        <span class="badge badge-relawan"><i class="fas fa-hands-helping"></i> Relawan</span>
-                    {% endif %}
-                </td>
-                {% endif %}
-                <td>
-                    {% if user.aktif %}
-                        <span class="badge badge-aktif"><i class="fas fa-check-circle"></i> Aktif</span>
-                    {% else %}
-                        <span class="badge badge-nonaktif"><i class="fas fa-times-circle"></i> Nonaktif</span>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if user.face_encoding %}
-                        <span style="color: #1a7a2e; font-weight: 600; font-size: 0.85rem;"><i class="fas fa-check-circle"></i> Terdaftar</span>
-                    {% else %}
-                        <span style="color: #c0392b; font-weight: 600; font-size: 0.85rem;"><i class="fas fa-times-circle"></i> Belum Terdaftar</span>
-                    {% endif %}
-                </td>
-                {% if can_crud %}
-                <td>
-                    <div style="display: flex; gap: 5px;">
-                        <button type="button" class="btn btn-warning" style="padding:6px 12px;font-size:0.8rem"
-                            data-uid="{{ user.id }}"
-                            data-nama="{{ user.nama | e }}"
-                            data-kode="{{ user.kode_relawan | e }}"
-                            data-email="{{ user.email or '' }}"
-                            data-role="{{ user.role }}"
-                            data-aktif="{{ '1' if user.aktif else '0' }}"
-                            onclick="openEditModal(
-                                Number(this.dataset.uid),
-                                this.dataset.nama,
-                                this.dataset.kode,
-                                this.dataset.email,
-                                this.dataset.role,
-                                this.dataset.aktif
-                            )">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <form method="POST" action="{{ url_for('dashboard.reset_wajah', user_id=user.id) }}"
-                               style="display:inline"
-                               onsubmit="return confirm('Yakin ingin mereset data wajah {{ user.nama }}? Relawan ini harus mendaftar wajah lagi saat presensi.')">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-primary" style="padding:6px 12px;font-size:0.8rem">
-                                <i class="fas fa-user-times"></i> Reset Wajah
-                            </button>
-                        </form>
-                        <form method="POST" action="{{ url_for('dashboard.hapus_relawan', user_id=user.id) }}"
-                               style="display:inline"
-                               onsubmit="return confirm('Yakin hapus {{ user.nama }}?')">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-danger" style="padding:6px 12px;font-size:0.8rem">
-                                <i class="fas fa-trash"></i> Hapus
-                            </button>
-                        </form>
-                    </div>
-                </td>
-                {% else %}
-                <td style="color:#888;font-size:0.85rem;">
-                    {{ user.created_at.strftime('%d-%m-%Y') if user.created_at else '-' }}
-                </td>
-                {% endif %}
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    </div>
-    <div class="no-results" id="noResults">
-        <i class="fas fa-search"></i> Tidak ada data yang cocok.
-    </div>
-    {% else %}
-    <div class="empty-state" style="margin-top:18px">
-        <i class="fas fa-users"></i>
-        Belum ada data relawan. Tambah manual atau import Excel.
+    <span class="count-info" id="countInfo"></span>
+    {% if can_crud %}
+    <div class="toolbar-actions">
+      <button
+        type="button"
+        class="btn btn-primary"
+        onclick="document.getElementById('tambahModal').classList.add('active')"
+      >
+        <i class="fas fa-plus"></i> Tambah
+      </button>
+      <form
+        method="POST"
+        action="{{ url_for('dashboard.import_relawan') }}"
+        enctype="multipart/form-data"
+      >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <input
+          type="file"
+          name="file"
+          class="file-input"
+          id="fileImport"
+          accept=".xlsx,.csv"
+          onchange="this.form.submit()"
+        />
+        <button
+          type="button"
+          class="btn btn-warning"
+          onclick="document.getElementById('fileImport').click()"
+        >
+          <i class="fas fa-upload"></i> Import Excel
+        </button>
+      </form>
     </div>
     {% endif %}
+  </div>
+
+  {% if relawan_list %}
+  <div style="overflow-x: auto; -webkit-overflow-scrolling: touch">
+    <table class="manage-table" id="relawanTable" style="margin-top: 18px">
+      <thead>
+        <tr>
+          <th style="width: 50px">No</th>
+          <th>Nama</th>
+          <th>Kode</th>
+          {% if current_user.role == 'admin' %}
+          <th>Role</th>
+          {% endif %}
+          <th>Status</th>
+          <th>Status Wajah</th>
+          {% if can_crud %}
+          <th>Aksi</th>
+          {% else %}
+          <th>Bergabung</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody id="relawanBody">
+        {% for user in relawan_list %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>
+            <div class="user-cell">
+              <span
+                class="avatar {% if user.role == 'tim_manajemen' %}avatar-green{% endif %}"
+              >
+                {{ user.nama[0]|upper }}
+              </span>
+              {{ user.nama }}
+            </div>
+          </td>
+          <td>
+            <code
+              style="
+                background: #f0f5fb;
+                padding: 3px 8px;
+                border-radius: 6px;
+                font-size: 0.82rem;
+              "
+            >
+              {{ user.kode_relawan }}
+            </code>
+          </td>
+          {% if current_user.role == 'admin' %}
+          <td>
+            {% if user.role == 'tim_manajemen' %}
+            <span class="badge badge-tim"
+              ><i class="fas fa-user-tie"></i> Tim Manajemen</span
+            >
+            {% else %}
+            <span class="badge badge-relawan"
+              ><i class="fas fa-hands-helping"></i> Relawan</span
+            >
+            {% endif %}
+          </td>
+          {% endif %}
+          <td>
+            {% if user.aktif %}
+            <span class="badge badge-aktif"
+              ><i class="fas fa-check-circle"></i> Aktif</span
+            >
+            {% else %}
+            <span class="badge badge-nonaktif"
+              ><i class="fas fa-times-circle"></i> Nonaktif</span
+            >
+            {% endif %}
+          </td>
+          <td>
+            {% if user.face_encoding %}
+            <span style="color: #1a7a2e; font-weight: 600; font-size: 0.85rem"
+              ><i class="fas fa-check-circle"></i> Terdaftar</span
+            >
+            {% else %}
+            <span style="color: #c0392b; font-weight: 600; font-size: 0.85rem"
+              ><i class="fas fa-times-circle"></i> Belum Terdaftar</span
+            >
+            {% endif %}
+          </td>
+          {% if can_crud %}
+          <td>
+            <div style="display: flex; gap: 5px">
+              <button
+                type="button"
+                class="btn btn-warning"
+                style="padding: 6px 12px; font-size: 0.8rem"
+                data-uid="{{ user.id }}"
+                data-nama="{{ user.nama | e }}"
+                data-kode="{{ user.kode_relawan | e }}"
+                data-email="{{ user.email or '' }}"
+                data-role="{{ user.role }}"
+                data-aktif="{{ '1' if user.aktif else '0' }}"
+                onclick="
+                  openEditModal(
+                    Number(this.dataset.uid),
+                    this.dataset.nama,
+                    this.dataset.kode,
+                    this.dataset.email,
+                    this.dataset.role,
+                    this.dataset.aktif,
+                  )
+                "
+              >
+                <i class="fas fa-edit"></i> Edit
+              </button>
+              <form
+                method="POST"
+                action="{{ url_for('dashboard.reset_wajah', user_id=user.id) }}"
+                style="display: inline"
+                onsubmit="return confirm('Yakin ingin mereset data wajah {{ user.nama }}? Relawan ini harus mendaftar wajah lagi saat presensi.')"
+              >
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="{{ csrf_token() }}"
+                />
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  style="padding: 6px 12px; font-size: 0.8rem"
+                >
+                  <i class="fas fa-user-times"></i> Reset Wajah
+                </button>
+              </form>
+              <form
+                method="POST"
+                action="{{ url_for('dashboard.hapus_relawan', user_id=user.id) }}"
+                style="display: inline"
+                onsubmit="return confirm('Yakin hapus {{ user.nama }}?')"
+              >
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="{{ csrf_token() }}"
+                />
+                <button
+                  type="submit"
+                  class="btn btn-danger"
+                  style="padding: 6px 12px; font-size: 0.8rem"
+                >
+                  <i class="fas fa-trash"></i> Hapus
+                </button>
+              </form>
+            </div>
+          </td>
+          {% else %}
+          <td style="color: #888; font-size: 0.85rem">
+            {{ user.created_at.strftime('%d-%m-%Y') if user.created_at else '-'
+            }}
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="no-results" id="noResults">
+    <i class="fas fa-search"></i> Tidak ada data yang cocok.
+  </div>
+  {% else %}
+  <div class="empty-state" style="margin-top: 18px">
+    <i class="fas fa-users"></i>
+    Belum ada data relawan. Tambah atau import Excel.
+  </div>
+  {% endif %}
 </div>
 
 <!-- ══════════════ MODAL TAMBAH RELAWAN ══════════════ -->
 <div class="modal-overlay" id="tambahModal">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h2><i class="fas fa-user-plus"></i> Tambah Relawan Manual</h2>
-            <button class="modal-close" onclick="document.getElementById('tambahModal').classList.remove('active')">&#x2715;</button>
-        </div>
-        <form method="POST" action="{{ url_for('dashboard.tambah_relawan') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-            <div class="modal-form-group">
-                <label>Nama Lengkap <span style="color:red">*</span></label>
-                <input type="text" name="nama" required>
-            </div>
-
-            <div class="modal-form-row">
-                <div class="modal-form-group">
-                    <label>Email (Opsional)</label>
-                    <input type="email" name="email">
-                </div>
-                <div class="modal-form-group">
-                    <label>Role</label>
-                    <select name="role">
-                        <option value="relawan">Relawan</option>
-                        <option value="tim_manajemen">Tim Manajemen</option>
-                    </select>
-                </div>
-            </div>
-            
-            <p style="font-size:0.8rem; color:#666; margin-top:-5px; margin-bottom:15px;">
-                <i class="fas fa-info-circle"></i> Kode Relawan akan digenerate otomatis. Password default: <b>123456</b>
-            </p>
-
-            <div class="modal-footer">
-                <button type="submit" class="btn-modal-save">
-                    <i class="fas fa-save"></i> Tambahkan
-                </button>
-                <button type="button" class="btn-modal-cancel" onclick="document.getElementById('tambahModal').classList.remove('active')">
-                    <i class="fas fa-times"></i> Batal
-                </button>
-            </div>
-        </form>
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2><i class="fas fa-user-plus"></i> Tambah Relawan</h2>
+      <button
+        class="modal-close"
+        onclick="
+          document.getElementById('tambahModal').classList.remove('active')
+        "
+      >
+        &#x2715;
+      </button>
     </div>
+    <form method="POST" action="{{ url_for('dashboard.tambah_relawan') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+      <div class="modal-form-group">
+        <label>Nama Lengkap <span style="color: red">*</span></label>
+        <input type="text" name="nama" required />
+      </div>
+
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>Email (Opsional)</label>
+          <input type="email" name="email" />
+        </div>
+        <div class="modal-form-group">
+          <label>Role</label>
+          <select name="role">
+            <option value="relawan">Relawan</option>
+            <option value="tim_manajemen">Tim Manajemen</option>
+          </select>
+        </div>
+      </div>
+
+      <p
+        style="
+          font-size: 0.8rem;
+          color: #666;
+          margin-top: -5px;
+          margin-bottom: 15px;
+        "
+      >
+        <i class="fas fa-info-circle"></i> Kode Relawan akan digenerate
+        otomatis. Password default: <b>123456</b>
+      </p>
+
+      <div class="modal-footer">
+        <button type="submit" class="btn-modal-save">
+          <i class="fas fa-save"></i> Tambahkan
+        </button>
+        <button
+          type="button"
+          class="btn-modal-cancel"
+          onclick="
+            document.getElementById('tambahModal').classList.remove('active')
+          "
+        >
+          <i class="fas fa-times"></i> Batal
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <!-- ══════════════ MODAL EDIT RELAWAN ══════════════ -->
 <div class="modal-overlay" id="editModal">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h2><i class="fas fa-user-edit"></i> Edit Relawan</h2>
-            <button class="modal-close" onclick="closeEditModal()">&#x2715;</button>
-        </div>
-        <form method="POST" id="editForm">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-            <div class="modal-form-group">
-                <label>Nama Lengkap <span style="color:red">*</span></label>
-                <input type="text" name="nama" id="editNama" required>
-            </div>
-
-            <div class="modal-form-row">
-                <div class="modal-form-group">
-                    <label>Kode Relawan <span style="color:red">*</span></label>
-                    <input type="text" name="kode_relawan" id="editKode" required>
-                </div>
-                <div class="modal-form-group">
-                    <label>Email</label>
-                    <input type="email" name="email" id="editEmail">
-                </div>
-            </div>
-
-            <div class="modal-form-row">
-                <div class="modal-form-group">
-                    <label>Role</label>
-                    <select name="role" id="editRole">
-                        <option value="relawan">Relawan</option>
-                        <option value="tim_manajemen">Tim Manajemen</option>
-                    </select>
-                </div>
-                <div class="modal-form-group">
-                    <label>Status</label>
-                    <select name="aktif" id="editAktif">
-                        <option value="1">Aktif</option>
-                        <option value="0">Non-aktif</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button type="submit" class="btn-modal-save">
-                    <i class="fas fa-save"></i> Simpan Perubahan
-                </button>
-                <button type="button" class="btn-modal-cancel" onclick="closeEditModal()">
-                    <i class="fas fa-times"></i> Batal
-                </button>
-            </div>
-        </form>
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2><i class="fas fa-user-edit"></i> Edit Relawan</h2>
+      <button class="modal-close" onclick="closeEditModal()">&#x2715;</button>
     </div>
+    <form method="POST" id="editForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+      <div class="modal-form-group">
+        <label>Nama Lengkap <span style="color: red">*</span></label>
+        <input type="text" name="nama" id="editNama" required />
+      </div>
+
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>Kode Relawan <span style="color: red">*</span></label>
+          <input type="text" name="kode_relawan" id="editKode" required />
+        </div>
+        <div class="modal-form-group">
+          <label>Email</label>
+          <input type="email" name="email" id="editEmail" />
+        </div>
+      </div>
+
+      <div class="modal-form-row">
+        <div class="modal-form-group">
+          <label>Role</label>
+          <select name="role" id="editRole">
+            <option value="relawan">Relawan</option>
+            <option value="tim_manajemen">Tim Manajemen</option>
+          </select>
+        </div>
+        <div class="modal-form-group">
+          <label>Status</label>
+          <select name="aktif" id="editAktif">
+            <option value="1">Aktif</option>
+            <option value="0">Non-aktif</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="submit" class="btn-modal-save">
+          <i class="fas fa-save"></i> Simpan Perubahan
+        </button>
+        <button
+          type="button"
+          class="btn-modal-cancel"
+          onclick="closeEditModal()"
+        >
+          <i class="fas fa-times"></i> Batal
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
-{% endblock %}
-
-{% block extra_script %}
+{% endblock %} {% block extra_script %}
 <script>
-/* ── Search & count & Pagination ── */
-const rows  = Array.from(document.querySelectorAll('#relawanBody tr'));
-const total = rows.length;
+  /* ── Search & count & Pagination ── */
+  const rows = Array.from(document.querySelectorAll("#relawanBody tr"));
+  const total = rows.length;
 
-function initPagination(tableId, rowsPerPage, searchInputId, noResultsId, countInfoId) {
+  function initPagination(
+    tableId,
+    rowsPerPage,
+    searchInputId,
+    noResultsId,
+    countInfoId,
+  ) {
     const table = document.getElementById(tableId);
     if (!table) return;
-    const tbody = table.querySelector('tbody');
-    const allRows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('td[colspan]'));
-    if(allRows.length === 0) return;
-    
-    const paginationContainer = document.createElement('div');
-    paginationContainer.className = 'pagination-container';
-    paginationContainer.style.display = 'flex';
-    paginationContainer.style.justifyContent = 'center';
-    paginationContainer.style.alignItems = 'center';
-    paginationContainer.style.gap = '8px';
-    paginationContainer.style.marginTop = '20px';
-    
+    const tbody = table.querySelector("tbody");
+    const allRows = Array.from(tbody.querySelectorAll("tr")).filter(
+      (r) => !r.querySelector("td[colspan]"),
+    );
+    if (allRows.length === 0) return;
+
+    const paginationContainer = document.createElement("div");
+    paginationContainer.className = "pagination-container";
+    paginationContainer.style.display = "flex";
+    paginationContainer.style.justifyContent = "center";
+    paginationContainer.style.alignItems = "center";
+    paginationContainer.style.gap = "8px";
+    paginationContainer.style.marginTop = "20px";
+
     table.parentNode.insertBefore(paginationContainer, table.nextSibling);
-    
+
     let currentPage = 1;
     let filteredRows = allRows;
-    
+
     function renderTable() {
-        const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
-        if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
-        if (currentPage < 1) currentPage = 1;
-        
-        allRows.forEach(row => row.style.display = 'none');
-        
-        const start = (currentPage - 1) * rowsPerPage;
-        const end = start + rowsPerPage;
-        filteredRows.slice(start, end).forEach(row => row.style.display = '');
-        
-        renderPaginationControls(totalPages);
-        
-        if (noResultsId) {
-            const noRes = document.getElementById(noResultsId);
-            if (noRes) noRes.style.display = filteredRows.length === 0 ? 'block' : 'none';
+      const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+      if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+
+      allRows.forEach((row) => (row.style.display = "none"));
+
+      const start = (currentPage - 1) * rowsPerPage;
+      const end = start + rowsPerPage;
+      filteredRows.slice(start, end).forEach((row) => (row.style.display = ""));
+
+      renderPaginationControls(totalPages);
+
+      if (noResultsId) {
+        const noRes = document.getElementById(noResultsId);
+        if (noRes)
+          noRes.style.display = filteredRows.length === 0 ? "block" : "none";
+      }
+
+      if (countInfoId) {
+        const countInfo = document.getElementById(countInfoId);
+        if (countInfo) {
+          if (filteredRows.length === 0) {
+            countInfo.textContent = "Tidak ada data";
+          } else {
+            countInfo.textContent = `Menampilkan ${start + 1} - ${Math.min(end, filteredRows.length)} dari ${filteredRows.length}`;
+          }
         }
-        
-        if (countInfoId) {
-            const countInfo = document.getElementById(countInfoId);
-            if (countInfo) {
-                if (filteredRows.length === 0) {
-                    countInfo.textContent = 'Tidak ada data';
-                } else {
-                    countInfo.textContent = `Menampilkan ${start + 1} - ${Math.min(end, filteredRows.length)} dari ${filteredRows.length}`;
-                }
-            }
-        }
+      }
     }
-    
+
     function renderPaginationControls(totalPages) {
-        paginationContainer.innerHTML = '';
-        if (totalPages <= 1) return;
-        
-        const prevBtn = document.createElement('button');
-        prevBtn.innerHTML = '&#10094; Prev';
-        prevBtn.className = 'btn-page';
-        prevBtn.disabled = currentPage === 1;
-        prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderTable(); } };
-        paginationContainer.appendChild(prevBtn);
-        
-        for (let i = 1; i <= totalPages; i++) {
-            if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-                const pageBtn = document.createElement('button');
-                pageBtn.textContent = i;
-                pageBtn.className = i === currentPage ? 'btn-page active' : 'btn-page';
-                pageBtn.onclick = () => { currentPage = i; renderTable(); };
-                paginationContainer.appendChild(pageBtn);
-            } else if (i === currentPage - 2 || i === currentPage + 2) {
-                const dots = document.createElement('span');
-                dots.textContent = '...';
-                paginationContainer.appendChild(dots);
-            }
+      paginationContainer.innerHTML = "";
+      if (totalPages <= 1) return;
+
+      const prevBtn = document.createElement("button");
+      prevBtn.innerHTML = "&#10094; Prev";
+      prevBtn.className = "btn-page";
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.onclick = () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderTable();
         }
-        
-        const nextBtn = document.createElement('button');
-        nextBtn.innerHTML = 'Next &#10095;';
-        nextBtn.className = 'btn-page';
-        nextBtn.disabled = currentPage === totalPages;
-        nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; renderTable(); } };
-        paginationContainer.appendChild(nextBtn);
+      };
+      paginationContainer.appendChild(prevBtn);
+
+      for (let i = 1; i <= totalPages; i++) {
+        if (
+          i === 1 ||
+          i === totalPages ||
+          (i >= currentPage - 1 && i <= currentPage + 1)
+        ) {
+          const pageBtn = document.createElement("button");
+          pageBtn.textContent = i;
+          pageBtn.className =
+            i === currentPage ? "btn-page active" : "btn-page";
+          pageBtn.onclick = () => {
+            currentPage = i;
+            renderTable();
+          };
+          paginationContainer.appendChild(pageBtn);
+        } else if (i === currentPage - 2 || i === currentPage + 2) {
+          const dots = document.createElement("span");
+          dots.textContent = "...";
+          paginationContainer.appendChild(dots);
+        }
+      }
+
+      const nextBtn = document.createElement("button");
+      nextBtn.innerHTML = "Next &#10095;";
+      nextBtn.className = "btn-page";
+      nextBtn.disabled = currentPage === totalPages;
+      nextBtn.onclick = () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderTable();
+        }
+      };
+      paginationContainer.appendChild(nextBtn);
     }
-    
+
     if (searchInputId) {
-        const searchInput = document.getElementById(searchInputId);
-        if (searchInput) {
-            searchInput.oninput = function() {
-                const q = this.value.toLowerCase().trim();
-                filteredRows = allRows.filter(row => {
-                    const cells = row.querySelectorAll('td');
-                    if (cells.length >= 3) {
-                        const nama = cells[1].textContent.toLowerCase();
-                        const kode = cells[2].textContent.toLowerCase();
-                        return nama.includes(q) || kode.includes(q);
-                    }
-                    return row.textContent.toLowerCase().includes(q);
-                });
-                currentPage = 1;
-                renderTable();
-            };
-        }
+      const searchInput = document.getElementById(searchInputId);
+      if (searchInput) {
+        searchInput.oninput = function () {
+          const q = this.value.toLowerCase().trim();
+          filteredRows = allRows.filter((row) => {
+            const cells = row.querySelectorAll("td");
+            if (cells.length >= 3) {
+              const nama = cells[1].textContent.toLowerCase();
+              const kode = cells[2].textContent.toLowerCase();
+              return nama.includes(q) || kode.includes(q);
+            }
+            return row.textContent.toLowerCase().includes(q);
+          });
+          currentPage = 1;
+          renderTable();
+        };
+      }
     }
     renderTable();
-}
+  }
 
-initPagination('relawanTable', 10, 'searchInput', 'noResults', 'countInfo');
+  initPagination("relawanTable", 10, "searchInput", "noResults", "countInfo");
 
-function openEditModal(id, nama, kode, email, role, aktif) {
-    document.getElementById('editForm').action = `/dashboard/edit-relawan/${id}`;
-    document.getElementById('editNama').value  = nama;
-    document.getElementById('editKode').value  = kode;
-    document.getElementById('editEmail').value = email;
-    document.getElementById('editRole').value  = role;
-    document.getElementById('editAktif').value = aktif;
-    document.getElementById('editModal').classList.add('active');
-}
-function closeEditModal() {
-    document.getElementById('editModal').classList.remove('active');
-}
+  function openEditModal(id, nama, kode, email, role, aktif) {
+    document.getElementById("editForm").action =
+      `/dashboard/edit-relawan/${id}`;
+    document.getElementById("editNama").value = nama;
+    document.getElementById("editKode").value = kode;
+    document.getElementById("editEmail").value = email;
+    document.getElementById("editRole").value = role;
+    document.getElementById("editAktif").value = aktif;
+    document.getElementById("editModal").classList.add("active");
+  }
+  function closeEditModal() {
+    document.getElementById("editModal").classList.remove("active");
+  }
 
-/* Klik di luar modal → tutup */
-document.getElementById('editModal').addEventListener('click', function(e) {
+  /* Klik di luar modal → tutup */
+  document.getElementById("editModal").addEventListener("click", function (e) {
     if (e.target === this) closeEditModal();
-});
-document.getElementById('tambahModal').addEventListener('click', function(e) {
-    if (e.target === this) this.classList.remove('active');
-});
+  });
+  document
+    .getElementById("tambahModal")
+    .addEventListener("click", function (e) {
+      if (e.target === this) this.classList.remove("active");
+    });
 
-/* Escape key → tutup */
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeEditModal();
-        document.getElementById('tambahModal').classList.remove('active');
+  /* Escape key → tutup */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      closeEditModal();
+      document.getElementById("tambahModal").classList.remove("active");
     }
-});
+  });
 </script>
 {% endblock %}
